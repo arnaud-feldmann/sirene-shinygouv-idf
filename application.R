@@ -164,6 +164,12 @@ server <- function(input, output, session) {
     leafletProxy("map",
                  data = df()) %>%
       clearShapes() %>%
+      addCircles(lng = ~vars$center[1L],
+                 lat = ~vars$center[2L],
+                 radius = vars$taille,
+                 stroke = FALSE,
+                 fillOpacity = 0.2,
+                 fillColor = "black") %>%
       addCircles(lng = ~x_longitude,
                  lat = ~y_latitude,
                  radius = 5 ,
