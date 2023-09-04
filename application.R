@@ -10,24 +10,34 @@ library(tidyr)
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
-tbl_a88_a17 <-
-  arrow::read_csv_arrow(here("a17_a88t.csv"), as_data_frame = FALSE,
-                        col_types = schema(A88 = string()))
 list_a88_a17 <-
-  tbl_a88_a17 %>%
+  arrow::read_csv_arrow(here("a17_a88t.csv"), as_data_frame = FALSE,
+                        col_types = schema(A88 = string())) %>%
   collect() %>%
   nest(data = c(A88, lbl)) %>%
   mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(lbl)))) %>%
   (\(tbl) tbl %>% pull(data) %>% setNames(tbl %>% pull(A17)))
 
 etabs <- read_parquet(here("retraitement", "etabs.parquet"), as_data_frame = FALSE)
-tranches <-
-  etabs %>%
-  distinct(trancheEffectifsEtablissement) %>%
-  filter(!is.na(trancheEffectifsEtablissement)) %>%
-  arrange(trancheEffectifsEtablissement) %>%
-  collect()
-
+list_tranches <-
+  list(
+    `Etablissement non employeur` = "NN",
+    `1 ou 2 salariés` = "01",
+    `3 à 5 salariés` = "02",
+    `6 à 9 salariés` = "03",
+    `10 à 19 salariés` = "11",
+    `20 à 49 salariés` = "12",
+    `50 à 99 salariés` = "21",
+    `100 à 199 salariés` = "22",
+    `200 à 249 salariés` = "31",
+    `250 à 499 salariés` = "32",
+    `500 à 999 salariés` = "41",
+    `1 000 à 1 999 salariés` = "42",
+    `2 000 à 4 999 salariés` = "51",
+    `5 000 à 9 999 salariés` = "52",
+    `5 000 à 9 999 salariés` = "53"
+  )
+  
 BOUNDS_IDF <- c(0.3570556640625, 47.7965516475594, 4.9713134765625, 49.4270536132596)
 CENTRE_DEFAUT <-
   c(
@@ -46,7 +56,7 @@ ui <- navbarPage(
                                   selectInput(
                                     "tranches",
                                     "Tranche d'Effectifs",
-                                    tranches,
+                                    list_tranches,
                                     selected = NULL,
                                     multiple = TRUE,
                                     selectize = TRUE
