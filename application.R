@@ -1,24 +1,29 @@
 library(shiny)
 library(leaflet)
-library(arrow)
+library(RSQLite)
 library(here)
 library(dplyr)
 library(stringr)
 library(DT)
 library(sp)
 library(tidyr)
+library(readr)
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
+con <- dbConnect(RSQLite::SQLite(),
+                 here("retraitement", "sqlite", "db.sqlite"),
+                 flags = SQLITE_RO)
+
 list_a88_a17 <-
-  arrow::read_csv_arrow(here("a17_a88t.csv"), as_data_frame = FALSE,
-                        col_types = schema(A88 = string())) %>%
-  collect() %>%
+  read_csv(here("a17_a88t.csv"),
+           col_types = cols_only(A17 = col_character(),
+                                 A88 = col_character(),
+                                 lbl = col_character())) %>%
   nest(data = c(A88, lbl)) %>%
   mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(lbl)))) %>%
   (\(tbl) tbl %>% pull(data) %>% setNames(tbl %>% pull(A17)))
 
-etabs <- read_parquet(here("retraitement", "etabs.parquet"), as_data_frame = FALSE)
 list_tranches <-
   list(
     `Etablissement non employeur` = "NN",
@@ -37,7 +42,7 @@ list_tranches <-
     `5 000 à 9 999 salariés` = "52",
     `5 000 à 9 999 salariés` = "53"
   )
-  
+
 BOUNDS_IDF <- c(0.3570556640625, 47.7965516475594, 4.9713134765625, 49.4270536132596)
 CENTRE_DEFAUT <-
   c(
@@ -46,11 +51,13 @@ CENTRE_DEFAUT <-
   )
 TAILLE_DEFAUT <- 500L
 
+MULTIPLE_ANGLE <- 6400000 / 180 * pi
+
 ui <- navbarPage(
   title = "Etablissements d'Île-de-France",
   windowTitle = "Etablissements d'Île-de-France",
   id = "menu",
-  selected = "Données",
+  selected = "Carte",
   shiny::tabPanel("Données",
                   fluidRow(column(3L,
                                   selectInput(
@@ -125,15 +132,18 @@ server <- function(input, output, session) {
     tranches <- vars$tranches
     
     isolate(
-      
       ret <-
-        etabs %>%
-        filter(str_sub(activitePrincipaleEtablissement, 1L, 2L) %in% a88 &
-                 trancheEffectifsEtablissement %in% tranches) %>%
-        mutate(distance_point = (x_longitude-center[1L])^2 + (y_latitude-center[2L])^2) %>%
-        arrange(distance_point) %>%
-        head(1000L) %>%
-        collect() %>%
+        dbGetQuery(con,
+                   paste0(
+                   "SELECT * FROM stock_etabs_geoloc_idf",
+                   " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
+                   paste0("'", a88, "'", collapse = ","),
+                   ") AND trancheEffectifsEtablissement in (",
+                   paste0("'",tranches, "'", collapse = ","),
+                   ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
+                   " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
+                   " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
+                   " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE)) %>%
         mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                           pt = center,
                                           longlat = TRUE)) %>%
