@@ -15,18 +15,19 @@ con <- dbConnect(RSQLite::SQLite(),
                  here("retraitement", "sqlite", "db.sqlite"),
                  flags = SQLITE_RO)
 
-list_a88_a17 <-
+tbl_a88_a17 <- 
   read_csv(here("a17_a88t.csv"),
            col_types = cols_only(A17 = col_character(),
                                  A88 = col_character(),
-                                 lbl = col_character())) %>%
+                                 lbl = col_character()))
+list_a88_a17 <-
+  tbl_a88_a17 %>%
   nest(data = c(A88, lbl)) %>%
   mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(lbl)))) %>%
   (\(tbl) tbl %>% pull(data) %>% setNames(tbl %>% pull(A17)))
 
 list_tranches <-
-  list(
-    `Etablissement non employeur` = "NN",
+  c(
     `1 ou 2 salariés` = "01",
     `3 à 5 salariés` = "02",
     `6 à 9 salariés` = "03",
@@ -42,8 +43,11 @@ list_tranches <-
     `5 000 à 9 999 salariés` = "52",
     `5 000 à 9 999 salariés` = "53"
   )
+tbl_tranches <-
+  tibble(tr_label = names(list_tranches),
+         tranche = list_tranches)
 
-BOUNDS_IDF <- c(0.3570556640625, 47.7965516475594, 4.9713134765625, 49.4270536132596)
+BOUNDS_IDF <- c(0.04287105, 48.0487500, 4.65712895, 49.6792500)
 CENTRE_DEFAUT <-
   c(
     (BOUNDS_IDF[1L] + BOUNDS_IDF[3L]) / 2,
@@ -51,7 +55,7 @@ CENTRE_DEFAUT <-
   )
 TAILLE_DEFAUT <- 500L
 
-MULTIPLE_ANGLE <- 6400000 / 180 * pi
+MULTIPLE_ANGLE <- 50000
 
 ui <- navbarPage(
   title = "Etablissements d'Île-de-France",
@@ -64,7 +68,7 @@ ui <- navbarPage(
                                     "tranches",
                                     "Tranche d'Effectifs",
                                     list_tranches,
-                                    selected = NULL,
+                                    selected = unname(list_tranches),
                                     multiple = TRUE,
                                     selectize = TRUE
                                   )),
@@ -73,9 +77,9 @@ ui <- navbarPage(
                                     "a88",
                                     "A88",
                                     list_a88_a17,
-                                    selected = NULL,
+                                    selected = unname(do.call(c, list_a88_a17)),
                                     multiple = TRUE,
-                                    selectize = TRUE
+                                    selectize = FALSE
                                   )),
                            column(3L,
                                   actionButton("actualiser_dt", "Go !"))
@@ -135,25 +139,39 @@ server <- function(input, output, session) {
       ret <-
         dbGetQuery(con,
                    paste0(
-                   "SELECT * FROM stock_etabs_geoloc_idf",
-                   " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
-                   paste0("'", a88, "'", collapse = ","),
-                   ") AND trancheEffectifsEtablissement in (",
-                   paste0("'",tranches, "'", collapse = ","),
-                   ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
-                   " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
-                   " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
-                   " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE)) %>%
+                     "SELECT * FROM stock_etabs_geoloc_idf",
+                     " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
+                     paste0("'", a88, "'", collapse = ","),
+                     ") AND trancheEffectifsEtablissement in (",
+                     paste0("'",tranches, "'", collapse = ","),
+                     ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
+                     " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
+                     " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
+                     " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE)) %>%
         mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                           pt = center,
                                           longlat = TRUE)) %>%
         filter(distance_point <= taille/1000) %>%
-        select(-distance_point)
+        arrange(distance_point) %>%
+        head(10000L) %>%
+        mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
+        left_join(tbl_tranches,
+                  by = c("trancheEffectifsEtablissement" = "tranche")) %>%
+        left_join(tbl_a88_a17,
+                  by =  "A88") %>%
+        transmute(siret = siret,
+                  `Tranche d'effectifs` = trancheEffectifsEtablissement,
+                  Secteur = lbl,
+                  adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
+                                  codePostalEtablissement),
+                  `Date de création` = dateCreationEtablissement,
+                  x = x_longitude,
+                  y = y_latitude,
+                  distance = distance_point)
     )
     
     return(ret)
   })
-  
   output$position <- reactive({
     paste(vars$taille,
           "mètres autour du point",
@@ -177,8 +195,8 @@ server <- function(input, output, session) {
                  stroke = FALSE,
                  fillOpacity = 0.2,
                  fillColor = "black") %>%
-      addCircles(lng = ~x_longitude,
-                 lat = ~y_latitude,
+      addCircles(lng = ~x,
+                 lat = ~y,
                  radius = 5 ,
                  stroke = FALSE,
                  fillOpacity = 0.8

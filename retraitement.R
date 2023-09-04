@@ -45,6 +45,7 @@ stock_etabs_adresse %>%
                    callback = function(tbl, pos) {
                      tbl %>%
                        filter((is.na(etatAdministratifEtablissement) | etatAdministratifEtablissement == "A") &
+                                trancheEffectifsEtablissement != "NN" &
                                 str_sub(codePostalEtablissement, 1L, 2L) %in% c("75", "77", "78", "91", "92", "93", "94", "95")) %>%
                        select(-etatAdministratifEtablissement) %>%
                        { dbWriteTable(conn = con, name = "stock_etabs_idf", value = .,
