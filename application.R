@@ -54,8 +54,44 @@ CENTRE_DEFAUT <-
     (BOUNDS_IDF[2L] + BOUNDS_IDF[4L]) / 2
   )
 TAILLE_DEFAUT <- 500L
-
+TRANCHES_SEL_DEFAUT <- unname(list_tranches)
+A88_SEL_DEFAUT <- unname(do.call(c, list_a88_a17))
 MULTIPLE_ANGLE <- 50000
+
+get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
+                      center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
+  dbGetQuery(con,
+             paste0(
+               "SELECT * FROM stock_etabs_geoloc_idf",
+               " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
+               paste0("'", a88, "'", collapse = ","),
+               ") AND trancheEffectifsEtablissement in (",
+               paste0("'",tranches, "'", collapse = ","),
+               ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
+               " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
+               " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
+               " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE)) %>%
+    mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
+                                      pt = center,
+                                      longlat = TRUE)) %>%
+    filter(distance_point <= taille/1000) %>%
+    arrange(distance_point) %>%
+    head(10000L) %>%
+    mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
+    left_join(tbl_tranches,
+              by = c("trancheEffectifsEtablissement" = "tranche")) %>%
+    left_join(tbl_a88_a17,
+              by =  "A88") %>%
+    transmute(siret = siret,
+              `Tranche d'effectifs` = trancheEffectifsEtablissement,
+              Secteur = lbl,
+              adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
+                              codePostalEtablissement),
+              `Date de création` = dateCreationEtablissement,
+              x = x_longitude,
+              y = y_latitude,
+              distance = distance_point)
+}
 
 ui <- navbarPage(
   title = "Etablissements d'Île-de-France",
@@ -68,7 +104,7 @@ ui <- navbarPage(
                                     "tranches",
                                     "Tranche d'Effectifs",
                                     list_tranches,
-                                    selected = unname(list_tranches),
+                                    selected = TRANCHES_SEL_DEFAUT,
                                     multiple = TRUE,
                                     selectize = TRUE
                                   )),
@@ -77,7 +113,7 @@ ui <- navbarPage(
                                     "a88",
                                     "A88",
                                     list_a88_a17,
-                                    selected = unname(do.call(c, list_a88_a17)),
+                                    selected = A88_SEL_DEFAUT,
                                     multiple = TRUE,
                                     selectize = FALSE
                                   )),
@@ -115,68 +151,21 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
+
+  center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
+  taille <- reactive(input$taille %||% TAILLE_DEFAUT)
+  a88 <- reactive(input$a88 %||% A88_SEL_DEFAUT)
+  tranches <- reactive(input$tranches %||% TRANCHES_SEL_DEFAUT)
   
-  vars <- reactiveValues(
-    center = CENTRE_DEFAUT,
-    taille = TAILLE_DEFAUT,
-    a88 = character(),
-    tranches = character()
-  )
-  observeEvent(c(input$actualiser_map, input$actualiser_dt) ,{
-    vars$center <- c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT
-    vars$taille <- input$taille %||% TAILLE_DEFAUT
-    vars$a88 <- input$a88
-    vars$tranches <- input$tranches
-  })
+  df <- reactiveVal(value = get_query())
+  observeEvent(c(input$actualiser_map, input$actualiser_dt),
+               df(get_query(a88(), tranches(), center(), taille())))
   
-  df <- reactive({
-    center <- vars$center
-    taille <- vars$taille
-    a88 <- vars$a88
-    tranches <- vars$tranches
-    
-    isolate(
-      ret <-
-        dbGetQuery(con,
-                   paste0(
-                     "SELECT * FROM stock_etabs_geoloc_idf",
-                     " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
-                     paste0("'", a88, "'", collapse = ","),
-                     ") AND trancheEffectifsEtablissement in (",
-                     paste0("'",tranches, "'", collapse = ","),
-                     ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
-                     " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
-                     " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
-                     " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE)) %>%
-        mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
-                                          pt = center,
-                                          longlat = TRUE)) %>%
-        filter(distance_point <= taille/1000) %>%
-        arrange(distance_point) %>%
-        head(10000L) %>%
-        mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
-        left_join(tbl_tranches,
-                  by = c("trancheEffectifsEtablissement" = "tranche")) %>%
-        left_join(tbl_a88_a17,
-                  by =  "A88") %>%
-        transmute(siret = siret,
-                  `Tranche d'effectifs` = trancheEffectifsEtablissement,
-                  Secteur = lbl,
-                  adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
-                                  codePostalEtablissement),
-                  `Date de création` = dateCreationEtablissement,
-                  x = x_longitude,
-                  y = y_latitude,
-                  distance = distance_point)
-    )
-    
-    return(ret)
-  })
   output$position <- reactive({
-    paste(vars$taille,
+    paste(taille(),
           "mètres autour du point",
-          sprintf("%.3f",vars$center[1L]),
-          sprintf("%.3f",vars$center[2L]))
+          sprintf("%.3f",center()[1L]),
+          sprintf("%.3f",center()[2L]))
   })
   
   output$map <- renderLeaflet({
@@ -189,9 +178,9 @@ server <- function(input, output, session) {
     leafletProxy("map",
                  data = df()) %>%
       clearShapes() %>%
-      addCircles(lng = ~vars$center[1L],
-                 lat = ~vars$center[2L],
-                 radius = vars$taille,
+      addCircles(lng = ~center()[1L],
+                 lat = ~center()[2L],
+                 radius = taille(),
                  stroke = FALSE,
                  fillOpacity = 0.2,
                  fillColor = "black") %>%
