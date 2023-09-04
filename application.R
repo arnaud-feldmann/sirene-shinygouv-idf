@@ -8,6 +8,7 @@ library(DT)
 library(sp)
 library(tidyr)
 library(readr)
+library(shinyWidgets)
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
@@ -93,37 +94,53 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               distance = distance_point)
 }
 
+boxstyle <-
+  "padding: 6px 8px;
+             margin-top: 6px;
+             margin-bottom: 6px;
+             background-color: #fdfdfd;
+             border: 1px solid #e3e3e3;
+             border-radius: 4px;
+             -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.03);
+             box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.03);"
+
 ui <- navbarPage(
   title = "Etablissements d'Île-de-France",
   windowTitle = "Etablissements d'Île-de-France",
   id = "menu",
   selected = "Carte",
   shiny::tabPanel("Données",
+                  fluidRow(textOutput("position"),
+                           style = boxstyle),
+                  fluidRow(dataTableOutput("tbl")),
+                  hr(),
                   fluidRow(column(3L,
-                                  selectInput(
+                                  pickerInput(
                                     "tranches",
                                     "Tranche d'Effectifs",
                                     list_tranches,
                                     selected = TRANCHES_SEL_DEFAUT,
                                     multiple = TRUE,
-                                    selectize = TRUE
+                                    options = list(`actions-box` = TRUE,
+                                                   `deselect-all-text` = "Tout désélectionner",
+                                                   `select-all-text` = "Tout sélectionner",
+                                                   `none-selected-text` = "Sélection vide")
                                   )),
                            column(3L,
-                                  selectInput(
+                                  virtualSelectInput(
                                     "a88",
                                     "A88",
                                     list_a88_a17,
                                     selected = A88_SEL_DEFAUT,
                                     multiple = TRUE,
-                                    selectize = FALSE
+                                    selectAllText = "Tout sélectionner",
+                                    allOptionsSelectedText = "Tout",
+                                    placeholder = "Sélection vide"
                                   )),
                            column(3L,
-                                  actionButton("actualiser_dt", "Go !"))
-                  ),
-                  hr(),
-                  textOutput("position"),
-                  hr(),
-                  dataTableOutput("tbl")
+                                  actionButton("actualiser_dt", "Go !")),
+                           style = boxstyle
+                  )
   ),
   shiny::tabPanel("Carte",
                   div(class = "outer",
@@ -151,7 +168,7 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
-
+  
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
   taille <- reactive(input$taille %||% TAILLE_DEFAUT)
   a88 <- reactive(input$a88 %||% A88_SEL_DEFAUT)
