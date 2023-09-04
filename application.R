@@ -6,44 +6,35 @@ library(dplyr)
 library(stringr)
 library(DT)
 library(sp)
-
-
+library(tidyr)
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
-etabs <<- read_parquet(here("retraitement", "etabs.parquet"), as_data_frame = FALSE)
-tranches <<-
+tbl_a88_a17 <-
+  arrow::read_csv_arrow(here("a17_a88t.csv"), as_data_frame = FALSE,
+                        col_types = schema(A88 = string()))
+list_a88_a17 <-
+  tbl_a88_a17 %>%
+  collect() %>%
+  nest(data = c(A88, lbl)) %>%
+  mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(lbl)))) %>%
+  (\(tbl) tbl %>% pull(data) %>% setNames(tbl %>% pull(A17)))
+
+etabs <- read_parquet(here("retraitement", "etabs.parquet"), as_data_frame = FALSE)
+tranches <-
   etabs %>%
   distinct(trancheEffectifsEtablissement) %>%
   filter(!is.na(trancheEffectifsEtablissement)) %>%
   arrange(trancheEffectifsEtablissement) %>%
   collect()
-a88 <<-
-  etabs %>%
-  mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
-  distinct(A88) %>%
-  filter(!is.na(A88)) %>%
-  arrange(A88) %>%
-  collect()
 
 BOUNDS_IDF <- c(0.3570556640625, 47.7965516475594, 4.9713134765625, 49.4270536132596)
+CENTRE_DEFAUT <-
+  c(
+    (BOUNDS_IDF[1L] + BOUNDS_IDF[3L]) / 2,
+    (BOUNDS_IDF[2L] + BOUNDS_IDF[4L]) / 2
+  )
 TAILLE_DEFAUT <- 500L
-# RAYON_TERRE <- 6371009
-# 
-# magic_a <- 2 * pi * RAYON_TERRE
-# magic_b <- 0.5 * pi / 180
-# 
-# register_scalar_function(
-#   "distance_approximative",
-#   function(context, lon1, lat1, lon2, lat2) {
-#     x <- lat2 - lat1
-#     y <- (lon2 - lon1) * cos((lat2 + lat1) * magic_b)
-#     magic_a * sqrt(x^2 + y^2)
-#   },
-#   in_type = schema(lon1 = float64(), lat1 = float64(), lon2 = float64(), lat2 = float64()),
-#   out_type = float64(),
-#   auto_convert = FALSE
-# )
 
 ui <- navbarPage(
   title = "Etablissements d'Île-de-France",
@@ -51,7 +42,7 @@ ui <- navbarPage(
   id = "menu",
   selected = "Données",
   shiny::tabPanel("Données",
-                  fluidRow(column(4L,
+                  fluidRow(column(3L,
                                   selectInput(
                                     "tranches",
                                     "Tranche d'Effectifs",
@@ -60,17 +51,17 @@ ui <- navbarPage(
                                     multiple = TRUE,
                                     selectize = TRUE
                                   )),
-                           column(4L,
+                           column(3L,
                                   selectInput(
                                     "a88",
                                     "A88",
-                                    a88,
+                                    list_a88_a17,
                                     selected = NULL,
                                     multiple = TRUE,
                                     selectize = TRUE
-                                  ),
-                                  column(2L,
-                                         actionButton("actualiser_dt", "Go !")))
+                                  )),
+                           column(3L,
+                                  actionButton("actualiser_dt", "Go !"))
                   ),
                   hr(),
                   textOutput("position"),
@@ -98,25 +89,21 @@ ui <- navbarPage(
                       tags$div(id="cite",
                                'Source :', tags$em('Sirene (Insee)'))
                   )
+                  
   )
 )
 
 server <- function(input, output, session) {
   
   vars <- reactiveValues(
-    center = c(
-      (BOUNDS_IDF[1L] + BOUNDS_IDF[3L]) / 2,
-      (BOUNDS_IDF[2L] + BOUNDS_IDF[4L]) / 2
-    ),
+    center = CENTRE_DEFAUT,
     taille = TAILLE_DEFAUT,
     a88 = character(),
     tranches = character()
   )
-  observeEvent(input$actualiser_map ,{
-    vars$center <- c(input$map_center$lng, input$map_center$lat)
-    vars$taille <- input$taille
-  })
-  observeEvent(input$actualiser_dt ,{
+  observeEvent(c(input$actualiser_map, input$actualiser_dt) ,{
+    vars$center <- c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT
+    vars$taille <- input$taille %||% TAILLE_DEFAUT
     vars$a88 <- input$a88
     vars$tranches <- input$tranches
   })

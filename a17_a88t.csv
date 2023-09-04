@@ -1,0 +1,89 @@
+A17,A88,lbl
+"Agriculture, Sylviculture et pêche",01,"Cult. & prod. animale, chasse & sce ann."
+"Agriculture, Sylviculture et pêche",02,Sylviculture et exploitation forestière
+"Agriculture, Sylviculture et pêche",03,Pêche et aquaculture
+Industries extractives,05,Extraction de houille et de lignite
+Industries extractives,06,Extraction d'hydrocarbures
+Industries extractives,07,Extraction de minerais métalliques
+Industries extractives,08,Autres industries extractives
+Industries extractives,09,Sces de soutien aux indust. extractives
+Industrie Manufacturière,10,Industries alimentaires
+Industrie Manufacturière,11,Fabrication de boissons
+Industrie Manufacturière,12,Fabrication de produits à base de tabac
+Industrie Manufacturière,13,Fabrication de textiles
+Industrie Manufacturière,14,Industrie de l'habillement
+Industrie Manufacturière,15,Industrie du cuir et de la chaussure
+Industrie Manufacturière,16,"Trav. bois; fab. article bois, vannerie"
+Industrie Manufacturière,17,Industrie du papier et du carton
+Industrie Manufacturière,18,Imprimerie & reprod. d'enregistrements
+Industrie Manufacturière,19,Cokéfaction et raffinage
+Industrie Manufacturière,20,Industrie chimique
+Industrie Manufacturière,21,Industrie pharmaceutique
+Industrie Manufacturière,22,Fab. prod. en caoutchouc & en plastique
+Industrie Manufacturière,23,Fab. aut. prod. minéraux non métalliques
+Industrie Manufacturière,24,Métallurgie
+Industrie Manufacturière,25,Fab. prod. métalliq. sf machine & équipt
+Industrie Manufacturière,26,"Fab. prod. informat., électroniq. & opt."
+Industrie Manufacturière,27,Fabrication d'équipements électriques
+Industrie Manufacturière,28,Fabric. de machines & équipements n.c.a.
+Industrie Manufacturière,29,Industrie automobile
+Industrie Manufacturière,30,Fabric. d'autres matériels de transport
+Industrie Manufacturière,31,Fabrication de meubles
+Industrie Manufacturière,32,Autres industries manufacturières
+Industrie Manufacturière,33,Réparation & install. machine & équipt
+"Production et distribution d’électricité, de gaz, de vapeur et d’air conditionné",35,Prdn & distr. élec. gaz vap. & air cond.
+"Production et distribution d’eau ; assainissement, gestion des déchets et dépollution",36,"Captage, traitement & distribution d'eau"
+"Production et distribution d’eau ; assainissement, gestion des déchets et dépollution",37,Collecte et traitement des eaux usées
+"Production et distribution d’eau ; assainissement, gestion des déchets et dépollution",38,"Collecte, gestion déchets ; récupération"
+"Production et distribution d’eau ; assainissement, gestion des déchets et dépollution",39,Dépollution & autre sces gestion déchets
+Construction,41,Construction de bâtiments
+Construction,42,Génie civil
+Construction,43,Travaux de construction spécialisés
+"Commerce, réparation d’automobiles et de motocycles",45,Commerce & répar. automobile & motocycle
+"Commerce, réparation d’automobiles et de motocycles",46,Commerce gros hors auto. & motocycle
+"Commerce, réparation d’automobiles et de motocycles",47,"Com. détail, sf automobiles & motocycles"
+Transports et entreposage,49,Transport terrest. & trans. par conduite
+Transports et entreposage,50,Transports par eau
+Transports et entreposage,51,Transports aériens
+Transports et entreposage,52,Entreposage & sce auxiliaire des transp.
+Transports et entreposage,53,Activités de poste et de courrier
+Hébergement et restauration,55,Hébergement
+Hébergement et restauration,56,Restauration
+Information et communication,58,Édition
+Information et communication,59,"Prod. Films, enr. sonore & éd. musicale"
+Information et communication,60,Programmation et diffusion
+Information et communication,61,Télécommunications
+Information et communication,62,"Pgmtion, conseil & aut. act. informatiq."
+Information et communication,63,Services d'information
+Activités financières et d’assurance,64,Act. financ. hs assur. & cais. retraite
+Activités financières et d’assurance,65,Assurance
+Activités financières et d’assurance,66,Act. auxiliaire sces financ. & d'assur.
+Activités immobilières,68,Activités immobilières
+"Activités spécialisées, scientifiques et techniques",69,Activités juridiques et comptables
+"Activités spécialisées, scientifiques et techniques",70,"Act. sièges sociaux, conseil de gestion"
+"Activités spécialisées, scientifiques et techniques",71,"Architec. & ingénierie, ctrle ana. tech."
+"Activités spécialisées, scientifiques et techniques",72,Recherche-développement scientifique
+"Activités spécialisées, scientifiques et techniques",73,Publicité et études de marché
+"Activités spécialisées, scientifiques et techniques",74,"Aut. act. spécial., scientifiq. & techn."
+"Activités spécialisées, scientifiques et techniques",75,Activités vétérinaires
+Activités de services administratifs et de soutien,77,Activités de location et location-bail
+Activités de services administratifs et de soutien,78,Activités liées à l'emploi
+Activités de services administratifs et de soutien,79,Act .ag. voyage voyagiste sv. résa. etc.
+Activités de services administratifs et de soutien,80,Enquêtes et sécurité
+Activités de services administratifs et de soutien,81,Sces relatifs bâtimnt & aménagt paysager
+Activités de services administratifs et de soutien,82,Act. admin. & aut. act. soutien aux ent.
+Administration publique,84,"Admin. publi. & défense, séc. soc. Obli."
+Enseignement,85,Enseignement
+Santé humaine et action sociale,86,Activités pour la santé humaine
+Santé humaine et action sociale,87,Hébergement médico-social et social
+Santé humaine et action sociale,88,Action sociale sans hébergement
+"Arts, spectacles et activités récréatives",90,Act. créativ. artistiques & de spectacle
+"Arts, spectacles et activités récréatives",91,Biblioth. archive musée & aut. act. cul.
+"Arts, spectacles et activités récréatives",92,Organisation jeux de hasard & d'argent
+"Arts, spectacles et activités récréatives",93,"Act. sportives, récréatives & de loisirs"
+Autres activités de services,94,Activités des organisations associatives
+Autres activités de services,95,Répar. ordi. & bien perso. & domestique
+Autres activités de services,96,Autres services personnels
+"Activités des ménages en tant qu’employeurs, activités indifférenciées des ménages en tant que producteurs de biens et services pour usage propre",97,Act. ménage: empl. de person. domestique
+"Activités des ménages en tant qu’employeurs, activités indifférenciées des ménages en tant que producteurs de biens et services pour usage propre",98,Act. ménage : prod. b.&s. (usage propre)
+Activités extra-territoriales,99,Act. organisations extraterritoriales
