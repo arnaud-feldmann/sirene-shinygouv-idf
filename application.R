@@ -14,7 +14,8 @@ library(shinyWidgets)
 
 con <- dbConnect(RSQLite::SQLite(),
                  here("retraitement", "sqlite", "db.sqlite"),
-                 flags = SQLITE_RO)
+                 flags = SQLITE_RO,
+                 extended_types = TRUE)
 
 tbl_a88_a17 <- 
   read_csv(here("a17_a88t.csv"),
@@ -85,10 +86,11 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     left_join(tbl_a88_a17,
               by =  "A88") %>%
     transmute(siret = siret,
+              enseigneEtablissement = enseigneEtablissement,
               `Tranche d'effectifs` = trancheEffectifsEtablissement,
               Secteur = lbl,
               adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
-                              codePostalEtablissement),
+                              codePostalEtablissement, libelleCommuneEtablissement),
               `Date de création` = dateCreationEtablissement,
               x = x_longitude,
               y = y_latitude,
