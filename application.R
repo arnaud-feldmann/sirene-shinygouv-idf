@@ -75,6 +75,7 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                       pt = center,
                                       longlat = TRUE)) %>%
+    as_tibble() %>%
     filter(distance_point <= taille/1000) %>%
     arrange(distance_point) %>%
     head(10000L) %>%
