@@ -124,7 +124,8 @@ ui <- navbarPage(
                                                  min = 0,
                                                  max = 60000L,
                                                  step = 1L),
-                                    actionButton("actualiser_map", "Go !")
+                                    actionButton("actualiser_map", "Go !",
+                                                 class = "btn-success")
                       ),
                       
                       tags$div(id="cite",
@@ -140,7 +141,7 @@ ui <- navbarPage(
                   fluidRow(column(3L,
                                   pickerInput(
                                     "tranches",
-                                    "Tranche d'Effectifs",
+                                    HTML("<b>Tranche d'Effectifs</b>"),
                                     list_tranches,
                                     selected = TRANCHES_SEL_DEFAUT,
                                     multiple = TRUE,
@@ -152,7 +153,7 @@ ui <- navbarPage(
                            column(3L,
                                   virtualSelectInput(
                                     "a88",
-                                    "A88",
+                                    HTML("<b>A88</b>"),
                                     list_a88_a17,
                                     selected = A88_SEL_DEFAUT,
                                     multiple = TRUE,
@@ -161,7 +162,10 @@ ui <- navbarPage(
                                     placeholder = "Sélection vide"
                                   )),
                            column(3L,
-                                  actionButton("actualiser_dt", "Go !")),
+                                  div(
+                                    actionButton("actualiser_dt", "Go !", class = "btn-success"),
+                                    style = "padding:22px")
+                                  ),
                            style = boxstyle
                   )
   )
