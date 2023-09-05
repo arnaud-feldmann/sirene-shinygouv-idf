@@ -250,7 +250,7 @@ server <- function(input, output, session) {
   output$tbl <- DT::renderDataTable({
     res <- DT::datatable(
       df(),
-      extensions = "Scroller",
+      extensions = c("Scroller", "Buttons"),
       style = "bootstrap",
       class = "compact",
       width = "100%",
@@ -260,10 +260,42 @@ server <- function(input, output, session) {
       options = list(
         deferRender = TRUE,
         scrollX = TRUE,
-        scrollY = 500,
+        scrollY = 400,
         scroller = TRUE,
         language = list(
           url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+        ),
+        dom = "fBrtip",
+        buttons = list(
+          list(
+            extend = "copy",
+            charset = "utf-8",
+            bom = TRUE,
+            exportOptions = list(
+              modifier = list(
+                search = "applied"
+              )
+            )
+          ),
+          list(
+            extend = "csv",
+            charset = "utf-8",
+            bom = TRUE,
+            exportOptions = list(
+              modifier = list(
+                search = "applied"
+              )
+            )
+          ),
+          list(
+            extend = "excel",
+            charset = "utf-8",
+            exportOptions = list(
+              modifier = list(
+                search = "applied"
+              )
+            )
+          )
         )
       )
     )
