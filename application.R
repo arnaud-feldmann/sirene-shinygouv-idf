@@ -109,6 +109,29 @@ ui <- navbarPage(
   windowTitle = "Etablissements d'Île-de-France",
   id = "menu",
   selected = "Carte",
+  shiny::tabPanel("Carte",
+                  div(class = "outer",
+                      tags$head(
+                        includeCSS("styles.css")
+                      ),
+                      leafletOutput("map", width = "100%", height = "100%"),
+                      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                                    draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+                                    width = 330, height = "auto",
+                                    numericInput("taille",
+                                                 label = "Taille du cercle (m) :",
+                                                 value = TAILLE_DEFAUT,
+                                                 min = 0,
+                                                 max = 60000L,
+                                                 step = 1L),
+                                    actionButton("actualiser_map", "Go !")
+                      ),
+                      
+                      tags$div(id="cite",
+                               'Source :', tags$em('Sirene (Insee)'))
+                  )
+                  
+  ),
   shiny::tabPanel("Données",
                   fluidRow(textOutput("position"),
                            style = boxstyle),
@@ -141,29 +164,6 @@ ui <- navbarPage(
                                   actionButton("actualiser_dt", "Go !")),
                            style = boxstyle
                   )
-  ),
-  shiny::tabPanel("Carte",
-                  div(class = "outer",
-                      tags$head(
-                        includeCSS("styles.css")
-                      ),
-                      leafletOutput("map", width = "100%", height = "100%"),
-                      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                    draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
-                                    width = 330, height = "auto",
-                                    numericInput("taille",
-                                                 label = "Taille du cercle (m) :",
-                                                 value = TAILLE_DEFAUT,
-                                                 min = 0,
-                                                 max = 60000L,
-                                                 step = 1L),
-                                    actionButton("actualiser_map", "Go !")
-                      ),
-                      
-                      tags$div(id="cite",
-                               'Source :', tags$em('Sirene (Insee)'))
-                  )
-                  
   )
 )
 
@@ -211,19 +211,27 @@ server <- function(input, output, session) {
   })
   
   output$tbl <- DT::renderDataTable({
-    DT::datatable(
+    res <- DT::datatable(
       df(),
       extensions = "Scroller",
       style = "bootstrap",
       class = "compact",
       width = "100%",
+      selection = "none",
+      rownames = FALSE,
+      filter = "top",
       options = list(
         deferRender = TRUE,
-        scrollY = 300,
+        scrollX = TRUE,
+        scrollY = 500,
         scroller = TRUE,
-        dom = 'tp'
+        language = list(
+          url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+        )
       )
     )
+    res$x$filterHTML <- str_replace_all(res$x$filterHTML,"\"All\"","\"Tout\"")
+    res
   })
 }
 
