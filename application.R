@@ -176,6 +176,10 @@ ui <- navbarPage(
 
 server <- function(input, output, session) {
   
+  onStop(function() {
+    dbDisconnect(con)
+  })
+  
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
   taille <- reactive(input$taille %||% TAILLE_DEFAUT)
   a88 <- reactive(input$a88 %||% A88_SEL_DEFAUT)
