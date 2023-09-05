@@ -11,11 +11,12 @@ geoloc_adresse <- here("input", "GeolocalisationEtablissement_Sirene_pour_etudes
 # Sirene stock etab (https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/)
 stock_etabs_adresse <- here("input", "StockEtablissement_utf8.csv")
 
-unlink(here("retraitement", "sqlite"), recursive = TRUE)
-Sys.sleep(5L)
-dir.create(here("retraitement", "sqlite"), showWarnings = FALSE)
 con <- dbConnect(RSQLite::SQLite(), here("retraitement", "sqlite", "db.sqlite"),
                  extended_types = TRUE)
+
+dbExecute(con, "DROP TABLE geoloc_idf")
+dbExecute(con, "DROP TABLE stock_etabs_idf")
+dbExecute(con, "DROP TABLE stock_etabs_geoloc_idf")
 
 geoloc_adresse %>%
   read_delim_chunked(delim = ";",
