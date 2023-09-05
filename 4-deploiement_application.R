@@ -64,8 +64,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
   dbGetQuery(con,
              paste0(
-               "SELECT etab.*,
-               ent.denominationUniteLegale, ent.nomUsageUniteLegale, ent.prenomUsuelUniteLegale, ent.sexeUniteLegale, ent.trancheEffectifsUniteLegale FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent",
+               "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale",
+               " FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent",
                " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
                paste0("'", a88, "'", collapse = ","),
                ") AND trancheEffectifsEtablissement in (",
@@ -100,12 +100,6 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               y = y_latitude,
               distance = distance_point,
               denominationUniteLegale = denominationUniteLegale,
-              proprietaire = str_c(case_when(sexeUniteLegale == "F" ~ "Mme",
-                                             sexeUniteLegale == "M" ~ "M.",
-                                             TRUE ~ ""),
-                                   if_else(is.na(prenomUsuelUniteLegale), "", str_to_title(prenomUsuelUniteLegale)),
-                                   if_else(is.na(nomUsageUniteLegale), "", str_to_upper(nomUsageUniteLegale)),
-                                   sep = " "),
               `Tranche d'effectifs entreprise` = trancheEffectifsUniteLegale
               )
 }

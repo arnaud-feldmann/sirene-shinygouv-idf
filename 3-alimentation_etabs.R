@@ -2,7 +2,6 @@ library(RSQLite)
 library(here)
 library(dplyr)
 library(readr)
-library(dbplyr)
 library(stringr)
 
 # Geoloc Sirene (https://www.data.gouv.fr/fr/datasets/geolocalisation-des-etablissements-du-repertoire-sirene-pour-les-etudes-statistiques/)
@@ -14,8 +13,8 @@ stock_etabs_adresse <- here("input", "StockEtablissement_utf8.csv")
 con <- dbConnect(RSQLite::SQLite(), here("retraitement", "sqlite", "db.sqlite"),
                  extended_types = TRUE)
 
-dbExecute(con, "DROP TABLE geoloc_idf")
-dbExecute(con, "DROP TABLE stock_etabs_idf")
+dbExecute(con, "DROP TABLE IF EXISTS geoloc_idf")
+dbExecute(con, "DROP TABLE IF EXISTS stock_etabs_idf")
 dbExecute(con, "DELETE FROM stock_etabs_geoloc_idf")
 
 geoloc_adresse %>%
@@ -38,7 +37,6 @@ stock_etabs_adresse %>%
   read_csv_chunked(col_types = cols_only(siret = col_character(),
                                          siren = col_character(),
                                          trancheEffectifsEtablissement = col_character(),
-                                         
                                          activitePrincipaleEtablissement = col_character(),
                                          dateCreationEtablissement = col_date(format = "%Y-%m-%d"),
                                          codePostalEtablissement = col_character(),
@@ -100,14 +98,13 @@ tryCatch(
     "DROP TABLE geoloc_idf")
     dbExecute(con,
     "DROP TABLE stock_etabs_idf")
+    dbExecute(con,
+    "DELETE FROM stock_ent_idf as ent
+    WHERE NOT EXISTS (SELECT '' FROM stock_etabs_geoloc_idf as etab 
+    WHERE etab.siren = ent.siren)")
     dbCommit(con)
   },
   error = function(e) dbRollback(con)
 )
-
-dbExecute(con,
-          "DELETE FROM stock_ent_idf as ent
-          WHERE NOT EXISTS (SELECT '' FROM stock_etabs_geoloc_idf as etab 
-                            WHERE etab.siren = ent.siren)")
 
 dbDisconnect(con)

@@ -1,9 +1,5 @@
 library(RSQLite)
 library(here)
-library(dplyr)
-library(readr)
-library(dbplyr)
-library(stringr)
 
 unlink(here("retraitement", "sqlite"), recursive = TRUE)
 Sys.sleep(5L)
@@ -16,9 +12,6 @@ dbExecute(con,
           "CREATE TABLE stock_ent_idf(
           siren TEXT not null,
           denominationUniteLegale TEXT,
-          nomUsageUniteLegale TEXT,
-          prenomUsuelUniteLegale TEXT,
-          sexeUniteLegale TEXT,
           trancheEffectifsUniteLegale TEXT,
           primary key (siren))")
 
