@@ -21,11 +21,11 @@ tbl_a88_a17 <-
   read_csv(here("a17_a88t.csv"),
            col_types = cols_only(A17 = col_character(),
                                  A88 = col_character(),
-                                 lbl = col_character()))
+                                 A88_lbl = col_character()))
 list_a88_a17 <-
   tbl_a88_a17 %>%
-  nest(data = c(A88, lbl)) %>%
-  mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(lbl)))) %>%
+  nest(data = c(A88, A88_lbl)) %>%
+  mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(A88_lbl)))) %>%
   (\(tbl) tbl %>% pull(data) %>% setNames(tbl %>% pull(A17)))
 
 list_tranches <-
@@ -46,7 +46,7 @@ list_tranches <-
     `5 000 à 9 999 salariés` = "53"
   )
 tbl_tranches <-
-  tibble(tr_label = names(list_tranches),
+  tibble(tranche_lbl = names(list_tranches),
          tranche = list_tranches)
 
 BOUNDS_IDF <- c(0.04287105, 48.0487500, 4.65712895, 49.6792500)
@@ -84,16 +84,16 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     arrange(distance_point) %>%
     head(10000L) %>%
     mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
-    # left_join(tbl_tranches,
-    #           by = c("trancheEffectifsEtablissement" = "tranche")) %>%
-    # left_join(tbl_tranches,
-    #           by = c("trancheEffectifsUniteLegale" = "tranche")) %>%
+    left_join(tbl_tranches %>% rename(`Tranche d'effectifs (établissement)` = tranche_lbl),
+              by = c("trancheEffectifsEtablissement" = "tranche")) %>%
+    left_join(tbl_tranches %>% rename(`Tranche d'effectifs (entreprise)` = tranche_lbl),
+              by = c("trancheEffectifsUniteLegale" = "tranche")) %>%
     left_join(tbl_a88_a17,
               by =  "A88") %>%
     transmute(siret = siret,
               enseigneEtablissement = enseigneEtablissement,
-              `Tranche d'effectifs` = trancheEffectifsEtablissement,
-              Secteur = lbl,
+              `Tranche d'effectifs (établissement)` = `Tranche d'effectifs (établissement)`,
+              Secteur = A88_lbl,
               adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
                               codePostalEtablissement, libelleCommuneEtablissement, sep = " "),
               `Date de création` = dateCreationEtablissement,
@@ -101,7 +101,7 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               y = y_latitude,
               distance = distance_point,
               denominationUniteLegale = denominationUniteLegale,
-              `Tranche d'effectifs entreprise` = trancheEffectifsUniteLegale
+              `Tranche d'effectifs (entreprise)` = `Tranche d'effectifs (entreprise)`
     )
 }
 
