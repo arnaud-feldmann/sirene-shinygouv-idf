@@ -90,18 +90,18 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               by = c("trancheEffectifsUniteLegale" = "tranche")) %>%
     left_join(tbl_a88_a17,
               by =  "A88") %>%
-    transmute(siret = siret,
-              enseigneEtablissement = enseigneEtablissement,
+    transmute(SIRET = siret,
+              `Nom d'établissement` = enseigneEtablissement,
+              `Nom d'entreprise` = denominationUniteLegale,
               `Tranche d'effectifs (établissement)` = `Tranche d'effectifs (établissement)`,
+              `Tranche d'effectifs (entreprise)` = `Tranche d'effectifs (entreprise)`,
               Secteur = A88_lbl,
-              adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
+              Adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
                               codePostalEtablissement, libelleCommuneEtablissement, sep = " "),
               `Date de création` = dateCreationEtablissement,
-              x = x_longitude,
-              y = y_latitude,
-              distance = distance_point,
-              denominationUniteLegale = denominationUniteLegale,
-              `Tranche d'effectifs (entreprise)` = `Tranche d'effectifs (entreprise)`
+              Longitude = x_longitude,
+              Latitude = y_latitude,
+              `Distance au point` = distance_point
     )
 }
 
@@ -189,7 +189,7 @@ server <- function(input, output, session) {
   })
   
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
-  taille <- reactive(input$taille %||% TAILLE_DEFAUT |> min(TAILLE_MAX))
+  taille <- reactive(input$taille %||% TAILLE_DEFAUT |> min(TAILLE_MAX + 1L))
   a88 <- reactive(input$a88 %||% A88_SEL_DEFAUT)
   tranches <- reactive(input$tranches %||% TRANCHES_SEL_DEFAUT)
   
@@ -231,12 +231,12 @@ server <- function(input, output, session) {
                  stroke = FALSE,
                  fillOpacity = 0.2,
                  fillColor = "black") %>%
-      addCircles(lng = ~x,
-                 lat = ~y,
+      addCircles(lng = ~Longitude,
+                 lat = ~Latitude,
                  radius = 5 ,
                  stroke = FALSE,
                  fillOpacity = 0.8)
-    if (taille() >= TAILLE_MAX) {
+    if (taille() > TAILLE_MAX) {
       shiny::showModal(
         shiny::modalDialog(title = "Taille maximale",
                            "La taille maximale est de 10 km !",
