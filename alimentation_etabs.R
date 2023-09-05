@@ -16,7 +16,7 @@ con <- dbConnect(RSQLite::SQLite(), here("retraitement", "sqlite", "db.sqlite"),
 
 dbExecute(con, "DROP TABLE geoloc_idf")
 dbExecute(con, "DROP TABLE stock_etabs_idf")
-dbExecute(con, "DROP TABLE stock_etabs_geoloc_idf")
+dbExecute(con, "DELETE FROM stock_etabs_geoloc_idf")
 
 geoloc_adresse %>%
   read_delim_chunked(delim = ";",
@@ -36,6 +36,7 @@ geoloc_adresse %>%
 
 stock_etabs_adresse %>%
   read_csv_chunked(col_types = cols_only(siret = col_character(),
+                                         siren = col_character(),
                                          trancheEffectifsEtablissement = col_character(),
                                          
                                          activitePrincipaleEtablissement = col_character(),
@@ -71,25 +72,8 @@ dbBegin(con)
 tryCatch(
   {
     dbExecute(con,
-    "CREATE TABLE stock_etabs_geoloc_idf(
-    siret TEXT not null,
-    trancheEffectifsEtablissement TEXT,
-    activitePrincipaleEtablissement TEXT,
-    dateCreationEtablissement DATE,
-    codePostalEtablissement TEXT,
-    libelleCommuneEtablissement TEXT,
-    numeroVoieEtablissement TEXT,
-    typeVoieEtablissement TEXT,
-    libelleVoieEtablissement TEXT,
-    enseigneEtablissement TEXT,
-    x_longitude REAL,
-    y_latitude REAL,
-    primary key (siret)
-    )"
-    )
-    dbExecute(con,
     "INSERT INTO stock_etabs_geoloc_idf 
-    SELECT s.siret, s.trancheEffectifsEtablissement, s.activitePrincipaleEtablissement,
+    SELECT s.siret, s.siren, s.trancheEffectifsEtablissement, s.activitePrincipaleEtablissement,
     s.dateCreationEtablissement, s.codePostalEtablissement, s.libelleCommuneEtablissement,
     s.numeroVoieEtablissement,
     s.typeVoieEtablissement, s.libelleVoieEtablissement, s.enseigneEtablissement,
@@ -110,12 +94,20 @@ tryCatch(
     "CREATE INDEX idx_trancheEffectifsEtablissement
     ON stock_etabs_geoloc_idf(trancheEffectifsEtablissement)")
     dbExecute(con,
+    "CREATE INDEX idx_siren
+    ON stock_etabs_geoloc_idf(siren)")
+    dbExecute(con,
     "DROP TABLE geoloc_idf")
     dbExecute(con,
     "DROP TABLE stock_etabs_idf")
     dbCommit(con)
   },
-  error = dbRollback(con)
+  error = function(e) dbRollback(con)
 )
+
+dbExecute(con,
+          "DELETE FROM stock_ent_idf as ent
+          WHERE NOT EXISTS (SELECT '' FROM stock_etabs_geoloc_idf as etab 
+                            WHERE etab.siren = ent.siren)")
 
 dbDisconnect(con)

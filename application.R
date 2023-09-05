@@ -64,7 +64,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
   dbGetQuery(con,
              paste0(
-               "SELECT * FROM stock_etabs_geoloc_idf",
+               "SELECT etab.*,
+               ent.denominationUniteLegale, ent.nomUsageUniteLegale, ent.prenomUsuelUniteLegale, ent.sexeUniteLegale, ent.trancheEffectifsUniteLegale FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent",
                " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
                paste0("'", a88, "'", collapse = ","),
                ") AND trancheEffectifsEtablissement in (",
@@ -72,7 +73,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
                " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
                " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
-               " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE)) %>%
+               " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE,
+               " AND etab.siren = ent.siren")) %>%
     mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                       pt = center,
                                       longlat = TRUE)) %>%
@@ -81,8 +83,10 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     arrange(distance_point) %>%
     head(10000L) %>%
     mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
-    left_join(tbl_tranches,
-              by = c("trancheEffectifsEtablissement" = "tranche")) %>%
+    # left_join(tbl_tranches,
+    #           by = c("trancheEffectifsEtablissement" = "tranche")) %>%
+    # left_join(tbl_tranches,
+    #           by = c("trancheEffectifsUniteLegale" = "tranche")) %>%
     left_join(tbl_a88_a17,
               by =  "A88") %>%
     transmute(siret = siret,
@@ -94,7 +98,16 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               `Date de création` = dateCreationEtablissement,
               x = x_longitude,
               y = y_latitude,
-              distance = distance_point)
+              distance = distance_point,
+              denominationUniteLegale = denominationUniteLegale,
+              proprietaire = str_c(case_when(sexeUniteLegale == "F" ~ "Mme",
+                                             sexeUniteLegale == "M" ~ "M.",
+                                             TRUE ~ ""),
+                                   if_else(is.na(prenomUsuelUniteLegale), "", str_to_title(prenomUsuelUniteLegale)),
+                                   if_else(is.na(nomUsageUniteLegale), "", str_to_upper(nomUsageUniteLegale)),
+                                   sep = " "),
+              `Tranche d'effectifs entreprise` = trancheEffectifsUniteLegale
+              )
 }
 
 boxstyle <-
