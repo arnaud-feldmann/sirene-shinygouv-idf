@@ -56,6 +56,7 @@ CENTRE_DEFAUT <-
     (BOUNDS_IDF[2L] + BOUNDS_IDF[4L]) / 2
   )
 TAILLE_DEFAUT <- 500L
+TAILLE_MAX <- 10000L
 TRANCHES_SEL_DEFAUT <- unname(list_tranches)
 A88_SEL_DEFAUT <- unname(do.call(c, list_a88_a17))
 MULTIPLE_ANGLE <- 50000
@@ -101,7 +102,7 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               distance = distance_point,
               denominationUniteLegale = denominationUniteLegale,
               `Tranche d'effectifs entreprise` = trancheEffectifsUniteLegale
-              )
+    )
 }
 
 boxstyle <-
@@ -131,8 +132,8 @@ ui <- navbarPage(
                                     numericInput("taille",
                                                  label = "Taille du cercle (m) :",
                                                  value = TAILLE_DEFAUT,
-                                                 min = 0,
-                                                 max = 60000L,
+                                                 min = 0L,
+                                                 max = TAILLE_MAX,
                                                  step = 1L),
                                     actionButton("actualiser_map", "Go !",
                                                  class = "btn-success")
@@ -175,7 +176,7 @@ ui <- navbarPage(
                                   div(
                                     actionButton("actualiser_dt", "Go !", class = "btn-success"),
                                     style = "padding:22px")
-                                  ),
+                           ),
                            style = boxstyle
                   )
   )
@@ -188,13 +189,24 @@ server <- function(input, output, session) {
   })
   
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
-  taille <- reactive(input$taille %||% TAILLE_DEFAUT)
+  taille <- reactive(input$taille %||% TAILLE_DEFAUT |> min(TAILLE_MAX))
   a88 <- reactive(input$a88 %||% A88_SEL_DEFAUT)
   tranches <- reactive(input$tranches %||% TRANCHES_SEL_DEFAUT)
   
   df <- reactiveVal(value = get_query())
+  
   observeEvent(c(input$actualiser_map, input$actualiser_dt),
-               df(get_query(a88(), tranches(), center(), taille())))
+               {
+                 df(get_query(a88(), tranches(), center(), taille()))
+                 if (NROW(df()) >= 10000L) {
+                   shiny::showModal(
+                     shiny::modalDialog(title = "Trop de résultats !",
+                                        "La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus",
+                                        easyClose = TRUE,
+                                        footer = NULL),
+                     session)
+                 }
+               })
   
   output$position <- reactive({
     paste(taille(),
@@ -223,9 +235,16 @@ server <- function(input, output, session) {
                  lat = ~y,
                  radius = 5 ,
                  stroke = FALSE,
-                 fillOpacity = 0.8
-                 
-      )
+                 fillOpacity = 0.8)
+    if (taille() >= TAILLE_MAX) {
+      shiny::showModal(
+        shiny::modalDialog(title = "Taille maximale",
+                           "La taille maximale est de 10 km !",
+                           easyClose = TRUE,
+                           footer = NULL),
+        session)
+      updateNumericInput(session, "taille", value = TAILLE_MAX)
+    }
   })
   
   output$tbl <- DT::renderDataTable({
