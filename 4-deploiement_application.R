@@ -263,6 +263,7 @@ server <- function(input, output, session) {
   })
   
   output$tbl <- DT::renderDT(
+    server = FALSE,
     datatable(
       df(),
       extensions = c("Scroller", "Buttons"),
@@ -280,6 +281,8 @@ server <- function(input, output, session) {
       rownames = FALSE,
       filter = "top",
       options = list(
+        autoWidth = TRUE,
+        columnDefs = list(list(width = '80px', targets = c(7L,8L))),
         dom = 'Bfrtip',
         deferRender = TRUE,
         scrollX = TRUE,
