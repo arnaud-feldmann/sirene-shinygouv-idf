@@ -149,7 +149,10 @@ ui <- navbarPage(
                            style = boxstyle),
                   fluidRow(DTOutput("tbl")),
                   hr(),
-                  fluidRow(column(2L,
+                  fluidRow(column(1L,
+                                  div(HTML("<b>Requêter : </b>"),
+                                      style = "padding-top:22px")),
+                           column(2L,
                                   pickerInput(
                                     "tranches",
                                     HTML("<b>Tranche d'Effectifs</b>"),
@@ -177,10 +180,17 @@ ui <- navbarPage(
                                     actionButton("actualiser_dt", "Go !", class = "btn-success"),
                                     style = "padding-top:22px"),
                            ),
-                           column(4L,
-                                  div(HTML("<b>Rechercher : </b>"), style="padding-top:22px",id = "filtre")),
-                           column(3L,
-                                  div(HTML("<b>Télécharger : </b>"), style="padding-top:22px",id = "boutons")),
+                           column(1L,
+                                  div(HTML("<b>Filtrer : </b>"),
+                                      style = "padding-top:22px")),
+                           column(2L,
+                                  div(id = "filtre",
+                                      style = "padding-top:22px")),
+                           column(1L,
+                                  div(HTML("<b>Télécharger : </b>"),
+                                      style = "padding-top:22px")),
+                           column(2,div(id = "boutons",
+                                        style = "padding-top:22px")),
                            style = boxstyle
                   )
   )
@@ -253,8 +263,8 @@ server <- function(input, output, session) {
       extensions = c("Scroller", "Buttons"),
       callback = JS(
         "$(document).on( 'init.dt', function() {
-        $('#boutons').append($('div.dt-buttons.btn-group'));
-        $('#filtre').append($('#DataTables_Table_0_filter'));
+          $('#boutons').append($('div.dt-buttons.btn-group'));
+          $('#filtre').append($('#DataTables_Table_0_filter'));
         })"
       ),
       style = "bootstrap",
