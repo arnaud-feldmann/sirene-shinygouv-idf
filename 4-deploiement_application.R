@@ -83,7 +83,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     filter(distance_point <= taille/1000) %>%
     arrange(distance_point) %>%
     head(10000L) %>%
-    mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L)) %>%
+    mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L),
+           siret = str_c(siren, nic)) %>%
     left_join(tbl_tranches %>% rename(`Tranche d'effectifs (établissement)` = tranche_lbl),
               by = c("trancheEffectifsEtablissement" = "tranche")) %>%
     left_join(tbl_tranches %>% rename(`Tranche d'effectifs (entreprise)` = tranche_lbl),

@@ -17,8 +17,8 @@ dbExecute(con,
 
 dbExecute(con,
           "CREATE TABLE stock_etabs_geoloc_idf(
-          siret TEXT not null,
           siren TEXT not null,
+          nic TEXT not null,
           trancheEffectifsEtablissement TEXT,
           activitePrincipaleEtablissement TEXT,
           dateCreationEtablissement DATE,
@@ -30,7 +30,7 @@ dbExecute(con,
           enseigneEtablissement TEXT,
           x_longitude REAL,
           y_latitude REAL,
-          primary key (siret),
+          primary key (siren, nic),
           foreign key (siren) REFERENCES stock_ent_idf (siren))")
 
 dbDisconnect(con)

@@ -36,6 +36,7 @@ geoloc_adresse %>%
 stock_etabs_adresse %>%
   read_csv_chunked(col_types = cols_only(siret = col_character(),
                                          siren = col_character(),
+                                         nic = col_character(),
                                          trancheEffectifsEtablissement = col_character(),
                                          activitePrincipaleEtablissement = col_character(),
                                          dateCreationEtablissement = col_date(format = "%Y-%m-%d"),
@@ -71,7 +72,7 @@ tryCatch(
   {
     dbExecute(con,
     "INSERT INTO stock_etabs_geoloc_idf 
-    SELECT s.siret, s.siren, s.trancheEffectifsEtablissement, s.activitePrincipaleEtablissement,
+    SELECT s.siren, s.nic, s.trancheEffectifsEtablissement, s.activitePrincipaleEtablissement,
     s.dateCreationEtablissement, s.codePostalEtablissement, s.libelleCommuneEtablissement,
     s.numeroVoieEtablissement,
     s.typeVoieEtablissement, s.libelleVoieEtablissement, s.enseigneEtablissement,
