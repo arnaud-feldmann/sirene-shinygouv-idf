@@ -147,8 +147,6 @@ ui <- navbarPage(
   shiny::tabPanel("Données",
                   fluidRow(textOutput("position"),
                            style = boxstyle),
-                  fluidRow(DTOutput("tbl")),
-                  hr(),
                   fluidRow(column(1L,
                                   div(HTML("<b>Requêter : </b>"),
                                       style = "padding-top:22px")),
@@ -190,10 +188,13 @@ ui <- navbarPage(
                                   div(HTML("<b>Télécharger : </b>"),
                                       style = "padding-top:22px")),
                            column(2,div(id = "boutons",
-                                        style = "padding-top:22px")),
-                           style = boxstyle
-                  )
+                                        style = "padding-top:22px"))
+                  ),
+                  hr(),
+                  fluidRow(DTOutput("tbl"),
+                           style=" z-index: 1; position: relative;")
   )
+  
 )
 
 server <- function(input, output, session) {
@@ -262,10 +263,11 @@ server <- function(input, output, session) {
       df(),
       extensions = c("Scroller", "Buttons"),
       callback = JS(
-        "$(document).on( 'init.dt', function() {
-          $('#boutons').append($('div.dt-buttons.btn-group'));
-          $('#filtre').append($('#DataTables_Table_0_filter'));
-        })"
+        "table.on('init', function() {
+          $('#boutons').empty().append($('div.dt-buttons.btn-group'));
+          $('#filtre').empty().append($('.dataTables_filter'));
+        });
+        "
       ),
       style = "bootstrap",
       class = "compact",
@@ -277,7 +279,7 @@ server <- function(input, output, session) {
         dom = 'Bfrtip',
         deferRender = TRUE,
         scrollX = TRUE,
-        scrollY = 400,
+        scrollY = 350,
         scroller = TRUE,
         language = list(
           url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
