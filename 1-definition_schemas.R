@@ -13,6 +13,8 @@ dbExecute(con,
           siren TEXT not null,
           denominationUniteLegale TEXT,
           trancheEffectifsUniteLegale TEXT,
+          categorieJuridiqueUniteLegale TEXT,
+          economieSocialeSolidaireUniteLegale TEXT,
           primary key (siren))")
 
 dbExecute(con,

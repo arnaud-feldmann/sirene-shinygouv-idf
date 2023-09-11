@@ -18,7 +18,9 @@ stock_ent_adresse %>%
   read_csv_chunked(col_types = cols_only(siren = col_character(),
                                          denominationUniteLegale = col_character(),
                                          trancheEffectifsUniteLegale = col_character(),
-                                         etatAdministratifUniteLegale = col_character()),
+                                         etatAdministratifUniteLegale = col_character(),
+                                         categorieJuridiqueUniteLegale = col_character(),
+                                         economieSocialeSolidaireUniteLegale = col_character()),
                    chunk_size = 1000000L,
                    callback = function(tbl, pos) {
                      tbl %>%
