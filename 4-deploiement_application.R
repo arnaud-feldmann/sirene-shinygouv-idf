@@ -147,9 +147,9 @@ ui <- navbarPage(
   shiny::tabPanel("Données",
                   fluidRow(textOutput("position"),
                            style = boxstyle),
-                  fluidRow(dataTableOutput("tbl")),
+                  fluidRow(DTOutput("tbl")),
                   hr(),
-                  fluidRow(column(3L,
+                  fluidRow(column(2L,
                                   pickerInput(
                                     "tranches",
                                     HTML("<b>Tranche d'Effectifs</b>"),
@@ -161,7 +161,7 @@ ui <- navbarPage(
                                                    `select-all-text` = "Tout sélectionner",
                                                    `none-selected-text` = "Sélection vide")
                                   )),
-                           column(3L,
+                           column(2L,
                                   virtualSelectInput(
                                     "a88",
                                     HTML("<b>A88</b>"),
@@ -172,11 +172,13 @@ ui <- navbarPage(
                                     allOptionsSelectedText = "Tout",
                                     placeholder = "Sélection vide"
                                   )),
-                           column(3L,
+                           column(1L,
                                   div(
                                     actionButton("actualiser_dt", "Go !", class = "btn-success"),
-                                    style = "padding:22px")
+                                    style = "padding:22px"),
                            ),
+                           column(4L,
+                                  div(HTML("<b>Télécharger : </b>"), style="padding:22px",id = "boutons")),
                            style = boxstyle
                   )
   )
@@ -243,10 +245,15 @@ server <- function(input, output, session) {
     }
   })
   
-  output$tbl <- DT::renderDataTable({
-    res <- DT::datatable(
+  output$tbl <- DT::renderDT(
+    datatable(
       df(),
       extensions = c("Scroller", "Buttons"),
+      callback = JS(
+        "table.on('draw.dt', function() {
+        $('#boutons').append($('#DataTables_Table_0_wrapper > div.dt-buttons.btn-group'));
+        })"
+      ),
       style = "bootstrap",
       class = "compact",
       width = "100%",
@@ -254,6 +261,7 @@ server <- function(input, output, session) {
       rownames = FALSE,
       filter = "top",
       options = list(
+        dom = 'Bfrtip',
         deferRender = TRUE,
         scrollX = TRUE,
         scrollY = 400,
@@ -261,7 +269,6 @@ server <- function(input, output, session) {
         language = list(
           url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
         ),
-        dom = "fBrtip",
         buttons = list(
           list(
             extend = "copy",
@@ -295,9 +302,9 @@ server <- function(input, output, session) {
         )
       )
     )
-    res$x$filterHTML <- str_replace_all(res$x$filterHTML,"\"All\"","\"Tout\"")
-    res
-  })
+  )
+  # res$x$filterHTML <- str_replace_all(res$x$filterHTML,"\"All\"","\"Tout\"")
+  #  res
 }
 
 shinyApp(ui, server)
