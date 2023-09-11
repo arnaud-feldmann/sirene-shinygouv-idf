@@ -175,10 +175,12 @@ ui <- navbarPage(
                            column(1L,
                                   div(
                                     actionButton("actualiser_dt", "Go !", class = "btn-success"),
-                                    style = "padding:22px"),
+                                    style = "padding-top:22px"),
                            ),
                            column(4L,
-                                  div(HTML("<b>Télécharger : </b>"), style="padding:22px",id = "boutons")),
+                                  div(HTML("<b>Rechercher : </b>"), style="padding-top:22px",id = "filtre")),
+                           column(3L,
+                                  div(HTML("<b>Télécharger : </b>"), style="padding-top:22px",id = "boutons")),
                            style = boxstyle
                   )
   )
@@ -250,8 +252,9 @@ server <- function(input, output, session) {
       df(),
       extensions = c("Scroller", "Buttons"),
       callback = JS(
-        "table.on('draw.dt', function() {
-        $('#boutons').append($('#DataTables_Table_0_wrapper > div.dt-buttons.btn-group'));
+        "$(document).on( 'init.dt', function() {
+        $('#boutons').append($('div.dt-buttons.btn-group'));
+        $('#filtre').append($('#DataTables_Table_0_filter'));
         })"
       ),
       style = "bootstrap",
@@ -267,7 +270,9 @@ server <- function(input, output, session) {
         scrollY = 400,
         scroller = TRUE,
         language = list(
-          url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+          url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
+          search = ""
+          
         ),
         buttons = list(
           list(
