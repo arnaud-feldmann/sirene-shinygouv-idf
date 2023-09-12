@@ -224,7 +224,7 @@ server <- function(input, output, session) {
   
   output$position <- reactive({
     paste(taille(),
-          "mètres autour du point",
+          "m autour du point",
           sprintf("%.3f",center()[1L]),
           sprintf("%.3f",center()[2L]))
   })
