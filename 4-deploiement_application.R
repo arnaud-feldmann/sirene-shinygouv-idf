@@ -121,7 +121,12 @@ ui <- navbarPage_dsfr(
   navbarPanel_dsfr("Carte",
                    div(class = "outer",
                        tags$head(
-                         includeCSS("styles.css")
+                         includeCSS("styles.css"),
+                         tags$script("
+                         Shiny.addCustomMessageHandler('taille', function(taille) {
+                          cercle_centre.setRadius(taille);
+                         });"
+                           )
                        ),
                        leafletOutput("map", width = "100%", height = "100%"),
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
@@ -226,21 +231,13 @@ server <- function(input, output, session) {
       onRender("
             function(el,x) {
                 let mymap = this;
-                mymap.on('click', function(event) {
-                  setTimeout(function () {
-                    if (typeof doubleclic_map === 'undefined') {
-                      mymap.panTo(event.latlng);
-                      console.log('coucou');
-                    } else {
-                      delete doubleclic_map;
-                      console.log('non');
-                    }
-                  }, 300);
-                });
+                cercle_centre = L.circle(mymap.getCenter(), {radius: 500, stroke: false, fillColor: 'black', fillOpacity: 0.2}).addTo(mymap)
                 mymap.doubleClickZoom.disable();
                 mymap.on('dblclick', function(event) {
-                  doubleclic_map = true;
 	                mymap.setView(event.latlng, mymap.getZoom()+1);
+                });
+                mymap.on('move', function(event) {
+                    cercle_centre.setLatLng(event.target.getCenter());
                 });
             }")
   })
@@ -248,18 +245,16 @@ server <- function(input, output, session) {
   observe({
     leafletProxy("map",
                  data = df()) %>%
-      clearShapes() %>%
-      addCircles(lng = ~center()[1L],
-                 lat = ~center()[2L],
-                 radius = taille(),
-                 stroke = FALSE,
-                 fillOpacity = 0.2,
-                 fillColor = "black") %>%
+      clearGroup("etabs") %>%
       addCircles(lng = ~Longitude,
                  lat = ~Latitude,
                  radius = 5 ,
                  stroke = FALSE,
-                 fillOpacity = 0.8)
+                 fillOpacity = 0.8,
+                 group = "etabs")
+  })
+  
+  observe({
     if (taille() > TAILLE_MAX) {
       shiny::showModal(
         shiny::modalDialog(title = "Taille maximale",
@@ -268,7 +263,7 @@ server <- function(input, output, session) {
                            footer = NULL),
         session)
       updateNumericInput_dsfr(session, "taille", value = TAILLE_MAX)
-    }
+    } else session$sendCustomMessage("taille", taille())
   })
   
   output$tbl <- DT::renderDT(
