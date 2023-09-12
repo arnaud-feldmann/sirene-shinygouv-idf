@@ -259,11 +259,11 @@ server <- function(input, output, session) {
       extensions = c("Scroller", "Buttons"),
       callback = JS(
         "table.on('init', function() {
+          $('div.has-feedback input[type=search]').attr('placeholder', 'Filtrer');
           $('#boutons').empty().append($('div.dt-buttons'));
           $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
-          $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
-          $('.form_control').addClass('fr-input');
           $('#filtre').empty().append($('.dataTables_filter'));
+          $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
         });
         "
       ),
