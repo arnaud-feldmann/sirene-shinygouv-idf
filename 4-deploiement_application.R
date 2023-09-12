@@ -123,10 +123,14 @@ ui <- navbarPage_dsfr(
                        tags$head(
                          includeCSS("styles.css"),
                          tags$script("
+                         cercle_centre = null;
                          Shiny.addCustomMessageHandler('taille', function(taille) {
-                          cercle_centre.setRadius(taille);
+                          if (cercle_centre !== null) {
+                            cercle_centre.setRadius(taille);
+                          }
                          });"
-                           )
+                         ),
+                         includeScript("pointeur.js")
                        ),
                        leafletOutput("map", width = "100%", height = "100%"),
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
@@ -231,7 +235,9 @@ server <- function(input, output, session) {
       onRender("
             function(el,x) {
                 let mymap = this;
-                cercle_centre = L.circle(mymap.getCenter(), {radius: 500, stroke: false, fillColor: 'black', fillOpacity: 0.2}).addTo(mymap)
+                var control = L.centerCross();
+                mymap.addLayer(control);
+                cercle_centre = L.circle(mymap.getCenter(), {radius: 500, stroke: false, fillColor: 'black', fillOpacity: 0.2}).addTo(mymap);
                 mymap.doubleClickZoom.disable();
                 mymap.on('dblclick', function(event) {
 	                mymap.setView(event.latlng, mymap.getZoom()+1);
