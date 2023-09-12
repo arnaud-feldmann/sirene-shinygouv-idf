@@ -225,9 +225,22 @@ server <- function(input, output, session) {
       fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
       onRender("
             function(el,x) {
-                this.doubleClickZoom.disable();
-                this.on('dblclick', function(event) {
-	                this.setView(event.latlng, this.getZoom()+1);
+                let mymap = this;
+                mymap.on('click', function(event) {
+                  setTimeout(function () {
+                    if (typeof doubleclic_map === 'undefined') {
+                      mymap.panTo(event.latlng);
+                      console.log('coucou');
+                    } else {
+                      delete doubleclic_map;
+                      console.log('non');
+                    }
+                  }, 300);
+                });
+                mymap.doubleClickZoom.disable();
+                mymap.on('dblclick', function(event) {
+                  doubleclic_map = true;
+	                mymap.setView(event.latlng, mymap.getZoom()+1);
                 });
             }")
   })
