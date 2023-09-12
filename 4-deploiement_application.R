@@ -64,9 +64,9 @@ TRANCHES_SEL_DEFAUT <- unname(list_tranches)
 A88_SEL_DEFAUT <- unname(do.call(c, list_a88_a17))
 MULTIPLE_ANGLE_X <- 70000
 MULTIPLE_ANGLE_Y <- 110000
-  # Ces multiples sélectionnent un carré pour la TAILLE_MAX 10000 en Île-de-France,
-  # de sorte à ce qu'on ne manque aucun établissement en faisant le rond à
-  # l'intérieur après la requête (plus simple) de carré.
+# Ces multiples sélectionnent un carré pour la TAILLE_MAX 10000 en Île-de-France,
+# de sorte à ce qu'on ne manque aucun établissement en faisant le rond à
+# l'intérieur après la requête (plus simple) de carré.
 
 get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
@@ -141,13 +141,39 @@ ui <- navbarPage_dsfr(
                                      draggable = FALSE, top = 190, left = "auto", right = 20, bottom = "auto",
                                      width = 330, height = "auto",
                                      numericInput_dsfr("taille",
-                                                       label = "Taille du cercle (m) :",
+                                                       label = HTML("<b>Taille du cercle (m)</b>"),
                                                        value = TAILLE_DEFAUT,
                                                        min = 0L,
                                                        max = TAILLE_MAX,
                                                        step = 1L),
+                                     div(
+                                       virtualSelectInput(
+                                         "tranches",
+                                         HTML("<b>Tranche d'Effectifs</b>"),
+                                         list_tranches,
+                                         selected = TRANCHES_SEL_DEFAUT,
+                                         multiple = TRUE,
+                                         selectAllText = "Tout sélectionner",
+                                         allOptionsSelectedText = "Tout",
+                                         placeholder = "Sélection vide"
+                                       ),
+                                       style = "padding-top: 12px; padding-bottom: 3px"
+                                     ),
+                                     div(
+                                       virtualSelectInput(
+                                         "a88",
+                                         HTML("<b>A88</b>"),
+                                         list_a88_a17,
+                                         selected = A88_SEL_DEFAUT,
+                                         multiple = TRUE,
+                                         selectAllText = "Tout sélectionner",
+                                         allOptionsSelectedText = "Tout",
+                                         placeholder = "Sélection vide"
+                                       ),
+                                       style = "padding-top: 3px; padding-bottom: 36px"
+                                     ),
                                      actionButton_dsfr("actualiser_map", "Go !"),
-                                     div(textOutput("position"), style = "padding-top: 12px")
+                                     div(textOutput("position"), style = "padding-top: 20px")
                        ),
                        
                        div(id="cite",
@@ -156,48 +182,19 @@ ui <- navbarPage_dsfr(
                    
   ),
   navbarPanel_dsfr("Données",
-                   fluidRow_dsfr(column_dsfr(2L,
-                                             div(
-                                               virtualSelectInput(
-                                                 "tranches",
-                                                 HTML("<b>Tranche d'Effectifs</b>"),
-                                                 list_tranches,
-                                                 selected = TRANCHES_SEL_DEFAUT,
-                                                 multiple = TRUE,
-                                                 selectAllText = "Tout sélectionner",
-                                                 allOptionsSelectedText = "Tout",
-                                                 placeholder = "Sélection vide"
-                                               ),
-                                               style = "padding: 12px")),
-                                 column_dsfr(2L,
-                                             div(
-                                               virtualSelectInput(
-                                                 "a88",
-                                                 HTML("<b>A88</b>"),
-                                                 list_a88_a17,
-                                                 selected = A88_SEL_DEFAUT,
-                                                 multiple = TRUE,
-                                                 selectAllText = "Tout sélectionner",
-                                                 allOptionsSelectedText = "Tout",
-                                                 placeholder = "Sélection vide"
-                                               ),
-                                               style = "padding: 12px")),
-                                 column_dsfr(2L,
-                                             div(
-                                               actionButton_dsfr("actualiser_dt", "Go !"),
-                                               style = "padding: 33px"),
-                                 ),
-                                 column_dsfr(3L,
-                                             div(
-                                               HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
-                                               div(id = "filtre"),
-                                               style = "padding: 10px")
-                                 ),
-                                 column_dsfr(3L,div(
-                                   HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
-                                   div(id = "boutons"),
+                   fluidRow_dsfr(
+                     column_dsfr(3L,
+                                 div(
+                                   HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
+                                   div(id = "filtre"),
                                    style = "padding: 10px")
-                                 )
+                     ),
+                     column_dsfr(6L),
+                     column_dsfr(3L,div(
+                       HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
+                       div(id = "boutons"),
+                       style = "padding: 10px")
+                     )
                    ),
                    DTOutput("tbl")
   )
@@ -212,7 +209,7 @@ server <- function(input, output, session) {
   
   df <- reactiveVal(value = get_query())
   
-  observeEvent(c(input$actualiser_map, input$actualiser_dt),
+  observeEvent(input$actualiser_map,
                {
                  df(get_query(a88(), tranches(), center(), taille()))
                  if (NROW(df()) >= 10000L) {
