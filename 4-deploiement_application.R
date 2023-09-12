@@ -62,7 +62,11 @@ TAILLE_DEFAUT <- 500L
 TAILLE_MAX <- 10000L
 TRANCHES_SEL_DEFAUT <- unname(list_tranches)
 A88_SEL_DEFAUT <- unname(do.call(c, list_a88_a17))
-MULTIPLE_ANGLE <- 50000
+MULTIPLE_ANGLE_X <- 70000
+MULTIPLE_ANGLE_Y <- 110000
+  # Ces multiples sélectionnent un carré pour la TAILLE_MAX 10000 en Île-de-France,
+  # de sorte à ce qu'on ne manque aucun établissement en faisant le rond à
+  # l'intérieur après la requête (plus simple) de carré.
 
 get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
@@ -75,10 +79,10 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                paste0("'", a88, "'", collapse = ","),
                ") AND trancheEffectifsEtablissement in (",
                paste0("'",tranches, "'", collapse = ","),
-               ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE,
-               " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE,
-               " AND y_latitude < ", center [2L] + taille / MULTIPLE_ANGLE,
-               " AND y_latitude > ", center [2L] - taille / MULTIPLE_ANGLE,
+               ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE_X,
+               " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE_X,
+               " AND y_latitude < ", center[2L] + taille / MULTIPLE_ANGLE_Y,
+               " AND y_latitude > ", center[2L] - taille / MULTIPLE_ANGLE_Y,
                " AND etab.siren = ent.siren")) %>%
     mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                       pt = center,
