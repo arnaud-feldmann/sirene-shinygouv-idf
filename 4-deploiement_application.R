@@ -132,11 +132,12 @@ ui <- navbarPage_dsfr(
                                                        min = 0L,
                                                        max = TAILLE_MAX,
                                                        step = 1L),
-                                     actionButton_dsfr("actualiser_map", "Go !")
+                                     actionButton_dsfr("actualiser_map", "Go !"),
+                                     div(textOutput("position"), style = "padding-top: 12px")
                        ),
                        
-                       tags$div(id="cite",
-                                'Source :', tags$em('Sirene (Insee)'))
+                       div(id="cite",
+                           'Source :', tags$em('Sirene (Insee)'))
                    )
                    
   ),
@@ -184,9 +185,7 @@ ui <- navbarPage_dsfr(
                                    style = "padding: 10px")
                                  )
                    ),
-                   span(fluidRow_dsfr(DTOutput("tbl")),
-                        style= "z-index: 1;"),
-                   fluidRow_dsfr(textOutput("position"))
+                   DTOutput("tbl")
   )
 )
 
@@ -259,7 +258,7 @@ server <- function(input, output, session) {
       callback = JS(
         "table.on('init', function() {
           $('div.has-feedback input[type=search]').attr('placeholder', 'Filtrer');
-          $('.dataTables_scrollBody').addClass('fr-table').css({ display: 'block' });;
+          $('.dataTables_scrollBody').addClass('fr-table').css({'z-index': 1})
           $('#boutons').empty().append($('div.dt-buttons'));
           $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
           $('#filtre').empty().append($('.dataTables_filter'));
