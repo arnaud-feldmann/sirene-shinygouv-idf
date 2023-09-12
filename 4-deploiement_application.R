@@ -185,7 +185,6 @@ ui <- navbarPage_dsfr(
                                  )
                    ),
                    span(fluidRow_dsfr(DTOutput("tbl")),
-                        class = "fr-table",
                         style=" z-index: 1;"),
                    fluidRow_dsfr(textOutput("position"))
   )
@@ -260,6 +259,7 @@ server <- function(input, output, session) {
       callback = JS(
         "table.on('init', function() {
           $('div.has-feedback input[type=search]').attr('placeholder', 'Filtrer');
+          $('.dataTables_scrollBody').addClass('fr-table').css({ display: 'block' });;
           $('#boutons').empty().append($('div.dt-buttons'));
           $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
           $('#filtre').empty().append($('.dataTables_filter'));
