@@ -185,7 +185,7 @@ ui <- navbarPage_dsfr(
                                  )
                    ),
                    span(fluidRow_dsfr(DTOutput("tbl")),
-                        style=" z-index: 1;"),
+                        style= "z-index: 1;"),
                    fluidRow_dsfr(textOutput("position"))
   )
 )
