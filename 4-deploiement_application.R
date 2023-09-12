@@ -9,6 +9,7 @@ library(sp)
 library(tidyr)
 library(readr)
 library(shinyWidgets)
+library(htmlwidgets)
 #remotes::install_github("spyrales/shinygouv")
 library(shinygouv)
 
@@ -221,7 +222,14 @@ server <- function(input, output, session) {
   output$map <- renderLeaflet({
     leaflet() %>%
       addProviderTiles(providers$Esri.WorldTopoMap) %>%
-      fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L])
+      fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
+      onRender("
+            function(el,x) {
+                this.doubleClickZoom.disable();
+                this.on('dblclick', function(event) {
+	                this.setView(event.latlng, this.getZoom()+1);
+                });
+            }")
   })
   
   observe({
@@ -316,8 +324,6 @@ server <- function(input, output, session) {
       )
     )
   )
-  # res$x$filterHTML <- str_replace_all(res$x$filterHTML,"\"All\"","\"Tout\"")
-  #  res
 }
 
 shinyApp(ui, server)
