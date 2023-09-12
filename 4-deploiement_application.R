@@ -9,6 +9,8 @@ library(sp)
 library(tidyr)
 library(readr)
 library(shinyWidgets)
+#remotes::install_github("spyrales/shinygouv")
+library(shinygouv)
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
@@ -109,96 +111,84 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     )
 }
 
-boxstyle <-
-  "padding: 6px 8px;
-             margin-top: 6px;
-             margin-bottom: 6px;
-             background-color: #fdfdfd;
-             border: 1px solid #e3e3e3;
-             border-radius: 4px;
-             -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.03);
-             box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.03);"
-
-ui <- navbarPage(
+ui <- navbarPage_dsfr(
   title = "Etablissements d'Île-de-France",
-  windowTitle = "Etablissements d'Île-de-France",
+  header = header_dsfr(intitule = "Drieets",
+                       nom_site_service = "Etablissements d'Île-de-France",
+                       baseline = "Service Etudes-Statistiques-Evaluation"),
   id = "menu",
-  selected = "Carte",
-  shiny::tabPanel("Carte",
-                  div(class = "outer",
-                      tags$head(
-                        includeCSS("styles.css")
-                      ),
-                      leafletOutput("map", width = "100%", height = "100%"),
-                      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                    draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
-                                    width = 330, height = "auto",
-                                    numericInput("taille",
-                                                 label = "Taille du cercle (m) :",
-                                                 value = TAILLE_DEFAUT,
-                                                 min = 0L,
-                                                 max = TAILLE_MAX,
-                                                 step = 1L),
-                                    actionButton("actualiser_map", "Go !",
-                                                 class = "btn-success")
-                      ),
-                      
-                      tags$div(id="cite",
-                               'Source :', tags$em('Sirene (Insee)'))
-                  )
-                  
+  navbarPanel_dsfr("Carte",
+                   div(class = "outer",
+                       tags$head(
+                         includeCSS("styles.css")
+                       ),
+                       leafletOutput("map", width = "100%", height = "100%"),
+                       absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                                     draggable = FALSE, top = 190, left = "auto", right = 20, bottom = "auto",
+                                     width = 330, height = "auto",
+                                     numericInput_dsfr("taille",
+                                                       label = "Taille du cercle (m) :",
+                                                       value = TAILLE_DEFAUT,
+                                                       min = 0L,
+                                                       max = TAILLE_MAX,
+                                                       step = 1L),
+                                     actionButton_dsfr("actualiser_map", "Go !")
+                       ),
+                       
+                       tags$div(id="cite",
+                                'Source :', tags$em('Sirene (Insee)'))
+                   )
+                   
   ),
-  shiny::tabPanel("Données",
-                  fluidRow(textOutput("position"),
-                           style = boxstyle),
-                  fluidRow(column(1L,
-                                  div(HTML("<b>Requêter : </b>"),
-                                      style = "padding-top:22px")),
-                           column(2L,
-                                  pickerInput(
-                                    "tranches",
-                                    HTML("<b>Tranche d'Effectifs</b>"),
-                                    list_tranches,
-                                    selected = TRANCHES_SEL_DEFAUT,
-                                    multiple = TRUE,
-                                    options = list(`actions-box` = TRUE,
-                                                   `deselect-all-text` = "Tout désélectionner",
-                                                   `select-all-text` = "Tout sélectionner",
-                                                   `none-selected-text` = "Sélection vide")
-                                  )),
-                           column(2L,
-                                  virtualSelectInput(
-                                    "a88",
-                                    HTML("<b>A88</b>"),
-                                    list_a88_a17,
-                                    selected = A88_SEL_DEFAUT,
-                                    multiple = TRUE,
-                                    selectAllText = "Tout sélectionner",
-                                    allOptionsSelectedText = "Tout",
-                                    placeholder = "Sélection vide"
-                                  )),
-                           column(1L,
-                                  div(
-                                    actionButton("actualiser_dt", "Go !", class = "btn-success"),
-                                    style = "padding-top:22px"),
-                           ),
-                           column(1L,
-                                  div(HTML("<b>Filtrer : </b>"),
-                                      style = "padding-top:22px")),
-                           column(2L,
-                                  div(id = "filtre",
-                                      style = "padding-top:22px")),
-                           column(1L,
-                                  div(HTML("<b>Télécharger : </b>"),
-                                      style = "padding-top:22px")),
-                           column(2,div(id = "boutons",
-                                        style = "padding-top:22px"))
-                  ),
-                  hr(),
-                  fluidRow(DTOutput("tbl"),
-                           style=" z-index: 1; position: relative;")
+  navbarPanel_dsfr("Données",
+                   fluidRow_dsfr(column_dsfr(2L,
+                                             div(
+                                               virtualSelectInput(
+                                                 "tranches",
+                                                 HTML("<b>Tranche d'Effectifs</b>"),
+                                                 list_tranches,
+                                                 selected = TRANCHES_SEL_DEFAUT,
+                                                 multiple = TRUE,
+                                                 selectAllText = "Tout sélectionner",
+                                                 allOptionsSelectedText = "Tout",
+                                                 placeholder = "Sélection vide"
+                                               ),
+                                               style = "padding: 12px")),
+                                 column_dsfr(2L,
+                                             div(
+                                               virtualSelectInput(
+                                                 "a88",
+                                                 HTML("<b>A88</b>"),
+                                                 list_a88_a17,
+                                                 selected = A88_SEL_DEFAUT,
+                                                 multiple = TRUE,
+                                                 selectAllText = "Tout sélectionner",
+                                                 allOptionsSelectedText = "Tout",
+                                                 placeholder = "Sélection vide"
+                                               ),
+                                               style = "padding: 12px")),
+                                 column_dsfr(2L,
+                                             div(
+                                               actionButton_dsfr("actualiser_dt", "Go !"),
+                                               style = "padding: 33px"),
+                                 ),
+                                 column_dsfr(3L,
+                                             div(
+                                               HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
+                                               div(id = "filtre"),
+                                               style = "padding: 10px")
+                                 ),
+                                 column_dsfr(3L,div(
+                                   HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
+                                   div(id = "boutons"),
+                                   style = "padding: 10px")
+                                 )
+                   ),
+                   span(fluidRow_dsfr(DTOutput("tbl")),
+                        class = "fr-table",
+                        style=" z-index: 1;"),
+                   fluidRow_dsfr(textOutput("position"))
   )
-  
 )
 
 server <- function(input, output, session) {
@@ -258,7 +248,7 @@ server <- function(input, output, session) {
                            easyClose = TRUE,
                            footer = NULL),
         session)
-      updateNumericInput(session, "taille", value = TAILLE_MAX)
+      updateNumericInput_dsfr(session, "taille", value = TAILLE_MAX)
     }
   })
   
@@ -269,14 +259,14 @@ server <- function(input, output, session) {
       extensions = c("Scroller", "Buttons"),
       callback = JS(
         "table.on('init', function() {
-          $('#boutons').empty().append($('div.dt-buttons.btn-group'));
+          $('#boutons').empty().append($('div.dt-buttons'));
+          $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
+          $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
+          $('.form_control').addClass('fr-input');
           $('#filtre').empty().append($('.dataTables_filter'));
         });
         "
       ),
-      style = "bootstrap",
-      class = "compact",
-      width = "100%",
       selection = "none",
       rownames = FALSE,
       filter = "top",
