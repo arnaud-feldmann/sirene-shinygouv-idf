@@ -126,6 +126,7 @@ ui <- navbarPage_dsfr(
                    div(class = "outer",
                        tags$head(
                          includeCSS("styles.css"),
+                         tags$style("strong, b { font-weight: bold; }"),
                          tags$script("
                          cercle_centre = null;
                          Shiny.addCustomMessageHandler('taille', function(taille) {
