@@ -274,7 +274,6 @@ server <- function(input, output, session) {
   })
   
   output$tbl <- DT::renderDT(
-    server = FALSE,
     datatable(
       df(),
       extensions = c("Scroller", "Buttons"),
