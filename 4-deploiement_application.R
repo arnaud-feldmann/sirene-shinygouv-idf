@@ -70,6 +70,10 @@ MULTIPLE_ANGLE_Y <- 110000
 
 get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
+  
+  X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
+  Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
+  
   dbGetQuery(con,
              paste0(
                "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale,
@@ -79,10 +83,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                paste0("'", a88, "'", collapse = ","),
                ") AND trancheEffectifsEtablissement in (",
                paste0("'",tranches, "'", collapse = ","),
-               ") AND x_longitude < ", center[1L] + taille / MULTIPLE_ANGLE_X,
-               " AND x_longitude > ", center[1L] - taille / MULTIPLE_ANGLE_X,
-               " AND y_latitude < ", center[2L] + taille / MULTIPLE_ANGLE_Y,
-               " AND y_latitude > ", center[2L] - taille / MULTIPLE_ANGLE_Y,
+               ") AND x_longitude BETWEEN ", center[1L] - X_VOISINAGE, " AND ", center[1L] + X_VOISINAGE,
+               " AND y_latitude BETWEEN ", center[2L] - Y_VOISINAGE, " AND ", center[2L] + Y_VOISINAGE,
                " AND etab.siren = ent.siren")) %>%
     mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                       pt = center,
