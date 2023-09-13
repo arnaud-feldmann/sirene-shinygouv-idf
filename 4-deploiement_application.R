@@ -223,10 +223,7 @@ server <- function(input, output, session) {
                })
   
   output$position <- reactive({
-    paste(taille(),
-          "m autour du point",
-          sprintf("%.3f",center()[1L]),
-          sprintf("%.3f",center()[2L]))
+    sprintf("%d m autour du point %.3f %.3f", taille(), center()[1L], center()[2L])
   })
   
   output$map <- renderLeaflet({
