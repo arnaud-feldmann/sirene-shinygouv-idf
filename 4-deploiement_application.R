@@ -261,6 +261,9 @@ server <- function(input, output, session) {
                 mymap.on('move', function(event) {
                     cercle_centre.setLatLng(event.target.getCenter());
                 });
+                L.control.zoom({ position: 'bottomright' }).addTo(this);
+                $('.leaflet-control-zoom-in').addClass('fr-btn  fr-icon-zoom-in-line').css({width:'60px'});
+                $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').css({width:'60px'});
             }")
   })
   
