@@ -269,7 +269,7 @@ server <- function(input, output, session) {
                            easyClose = TRUE,
                            footer = NULL),
         session)
-      updateNumericInput_dsfr(session, "taille", value = TAILLE_MAX)
+      updateNumericInput_dsfr(inputId = "taille", value = TAILLE_MAX)
     } else session$sendCustomMessage("taille", taille())
   })
   
