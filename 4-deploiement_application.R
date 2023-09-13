@@ -12,13 +12,11 @@ library(shinyWidgets)
 library(htmlwidgets)
 #remotes::install_github("spyrales/shinygouv")
 library(shinygouv)
+library(promises)
+library(future)
+plan(multisession, workers = 4)
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
-
-con <- dbConnect(RSQLite::SQLite(),
-                 here("retraitement", "sqlite", "db.sqlite"),
-                 flags = SQLITE_RO,
-                 extended_types = TRUE)
 
 tbl_a88_a17 <- 
   read_csv(here("a17_a88t.csv"),
@@ -71,10 +69,16 @@ MULTIPLE_ANGLE_Y <- 110000
 get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
   
+  con <- dbConnect(RSQLite::SQLite(),
+                   here("retraitement", "sqlite", "db.sqlite"),
+                   flags = SQLITE_RO,
+                   extended_types = TRUE)
+  
   X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
   Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
   
-  dbGetQuery(con,
+  ret <-
+    dbGetQuery(con,
              paste0(
                "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale,
                ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale",
@@ -116,6 +120,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               Latitude = y_latitude,
               `Distance au point` = distance_point
     )
+  dbDisconnect(con)
+  ret
 }
 
 ui <- navbarPage_dsfr(
@@ -214,15 +220,24 @@ server <- function(input, output, session) {
   
   observeEvent(input$actualiser_map,
                {
-                 df(get_query(a88(), tranches(), center(), taille()))
-                 if (NROW(df()) >= 10000L) {
-                   shiny::showModal(
-                     shiny::modalDialog(title = "Trop de résultats !",
-                                        "La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus",
-                                        easyClose = TRUE,
-                                        footer = NULL),
-                     session)
-                 }
+                 a88 <- a88()
+                 tranches <- tranches()
+                 center <- center()
+                 taille <- taille()
+                 future_promise({
+                   get_query(a88, tranches, center, taille)
+                 }) %...>%
+                   df %...>%
+                   (function(x) {
+                     if (NROW(df()) >= 10000L) {
+                       shiny::showModal(
+                         shiny::modalDialog(title = "Trop de résultats !",
+                                            "La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus",
+                                            easyClose = TRUE,
+                                            footer = NULL),
+                         session)
+                     }
+                   })
                })
   
   output$position <- reactive({
