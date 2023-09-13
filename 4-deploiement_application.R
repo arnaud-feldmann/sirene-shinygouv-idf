@@ -251,7 +251,7 @@ server <- function(input, output, session) {
   
   observe({
     leafletProxy("map",
-                 data = df()) %>%
+                 data = df()[,c("Longitude", "Latitude")]) %>%
       clearGroup("etabs") %>%
       addCircles(lng = ~Longitude,
                  lat = ~Latitude,
