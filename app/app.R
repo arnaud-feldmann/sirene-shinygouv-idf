@@ -80,10 +80,11 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
   ret <-
     dbGetQuery(con,
              paste0(
-               "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale,
-               ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale",
-               " FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent",
-               " WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
+               "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
+               "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
+               "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale ",
+               "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent ",
+               "WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
                paste0("'", a88, "'", collapse = ","),
                ") AND trancheEffectifsEtablissement in (",
                paste0("'",tranches, "'", collapse = ","),
@@ -98,7 +99,8 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     arrange(distance_point) %>%
     head(10000L) %>%
     mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L),
-           siret = str_c(siren, nic)) %>%
+           siret = str_c(siren, nic),
+           siret_siege = str_c(siren, nicSiegeUniteLegale)) %>%
     left_join(tbl_tranches %>% rename(`Tranche d'effectifs (établissement)` = tranche_lbl),
               by = c("trancheEffectifsEtablissement" = "tranche")) %>%
     left_join(tbl_tranches %>% rename(`Tranche d'effectifs (entreprise)` = tranche_lbl),
@@ -106,16 +108,19 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
     left_join(tbl_a88_a17,
               by =  "A88") %>%
     transmute(SIRET = siret,
+              `SIRET (siège)` = siret_siege,
               `Nom d'établissement` = enseigneEtablissement,
               `Nom d'entreprise` = denominationUniteLegale,
+              Secteur = A88_lbl,
               `Tranche d'effectifs (établissement)` = `Tranche d'effectifs (établissement)`,
               `Tranche d'effectifs (entreprise)` = `Tranche d'effectifs (entreprise)`,
-              Secteur = A88_lbl,
               Adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
                               codePostalEtablissement, libelleCommuneEtablissement, sep = " "),
               CJ = categorieJuridiqueUniteLegale,
               `Economie Sociale et Solidaire` = economieSocialeSolidaireUniteLegale,
               `Date de création` = dateCreationEtablissement,
+              `Dénomination usuelle (établissement)` = denominationUsuelleEtablissement,
+              `Dénomination usuelle (entreprise)` = denominationUsuelleUniteLegale,
               Longitude = x_longitude,
               Latitude = y_latitude,
               `Distance au point` = distance_point

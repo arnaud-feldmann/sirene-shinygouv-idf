@@ -11,11 +11,14 @@ con <- dbConnect(RSQLite::SQLite(), here("app", "sqlite", "db.sqlite"),
 dbExecute(con,
           "CREATE TABLE stock_ent_idf(
           siren TEXT not null,
+          nicSiegeUniteLegale not null,
           denominationUniteLegale TEXT,
           trancheEffectifsUniteLegale TEXT,
           categorieJuridiqueUniteLegale TEXT,
           economieSocialeSolidaireUniteLegale TEXT,
-          primary key (siren))")
+          denominationUsuelleUniteLegale TEXT,
+          primary key (siren),
+          foreign key (siren, nicSiegeUniteLegale) REFERENCES stock_etab_idf (siren, nic))")
 
 dbExecute(con,
           "CREATE TABLE stock_etabs_geoloc_idf(
@@ -32,6 +35,7 @@ dbExecute(con,
           enseigneEtablissement TEXT,
           x_longitude REAL,
           y_latitude REAL,
+          denominationUsuelleEtablissement TEXT,
           primary key (siren, nic),
           foreign key (siren) REFERENCES stock_ent_idf (siren))")
 

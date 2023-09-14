@@ -48,7 +48,8 @@ stock_etabs_adresse %>%
                                          etatAdministratifEtablissement = col_character(),
                                          enseigne1Etablissement = col_character(),
                                          enseigne2Etablissement = col_character(),
-                                         enseigne3Etablissement = col_character()),
+                                         enseigne3Etablissement = col_character(),
+                                         denominationUsuelleEtablissement = col_character()),
                    chunk_size = 1000000L,
                    callback = function(tbl, pos) {
                      tbl %>%
@@ -76,7 +77,7 @@ tryCatch(
     s.dateCreationEtablissement, s.codePostalEtablissement, s.libelleCommuneEtablissement,
     s.numeroVoieEtablissement,
     s.typeVoieEtablissement, s.libelleVoieEtablissement, s.enseigneEtablissement,
-    g.x_longitude, g.y_latitude
+    g.x_longitude, g.y_latitude, s.denominationUsuelleEtablissement
     FROM geoloc_idf as g, stock_etabs_idf as s
     WHERE g.siret = s.siret"
     )
