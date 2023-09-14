@@ -196,21 +196,27 @@ ui <- navbarPage_dsfr(
                    
   ),
   navbarPanel_dsfr("Données",
-                   fluidRow_dsfr(
-                     column_dsfr(3L,
-                                 div(
-                                   HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
-                                   div(id = "filtre"),
-                                   id = "conteneur-filtre")
+                   div(
+                     fluidRow_dsfr(
+                       column_dsfr(6L, div(
+                         div(id = "paginfo"),
+                         id = "conteneur-paginfo")),
+                       column_dsfr(3L,
+                                   div(
+                                     HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
+                                     div(id = "filtre"),
+                                     id = "conteneur-filtre")
+                       ),
+                       column_dsfr(3L,div(
+                         HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
+                         div(id = "boutons"),
+                         id = "conteneur-boutons")
+                       )
                      ),
-                     column_dsfr(6L),
-                     column_dsfr(3L,div(
-                       HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
-                       div(id = "boutons"),
-                       id = "conteneur-boutons")
-                     )
+                     div(DTOutput("tbl"),
+                         id = "conteneur-tbl")
                    ),
-                   DTOutput("tbl")
+                   class = "fr-container--fluid"
   )
 )
 
@@ -309,6 +315,7 @@ server <- function(input, output, session) {
           $('#boutons').empty().append($('div.dt-buttons'));
           $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
           $('#filtre').empty().append($('.dataTables_filter'));
+          $('#paginfo').empty().append($('.dataTables_info'));
           $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
         });
         "
@@ -327,7 +334,6 @@ server <- function(input, output, session) {
         language = list(
           url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
           search = ""
-          
         ),
         buttons = list(
           list(

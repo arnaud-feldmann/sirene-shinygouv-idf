@@ -1,3 +1,8 @@
+body {
+  overflow: hidden;
+  height: 100%;
+}
+
 strong, b {
   font-weight: bold;
 }
@@ -67,3 +72,9 @@ div.outer {
 #conteneur-filtre, #conteneur-boutons {
   padding: 10px;
 }
+
+#conteneur-paginfo {
+  padding-left: 10px;
+  padding-top: 32px;
+}
+
