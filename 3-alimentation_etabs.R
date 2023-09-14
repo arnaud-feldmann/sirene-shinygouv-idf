@@ -4,10 +4,10 @@ library(dplyr)
 library(readr)
 library(stringr)
 
-# Geoloc Sirene (https://www.data.gouv.fr/fr/datasets/geolocalisation-des-etablissements-du-repertoire-sirene-pour-les-etudes-statistiques/)
+# Geoloc Sirene
 geoloc_adresse <- here("input", "GeolocalisationEtablissement_Sirene_pour_etudes_statistiques_utf8.csv")
 
-# Sirene stock etab (https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/)
+# Sirene stock etab
 stock_etabs_adresse <- here("input", "StockEtablissement_utf8.csv")
 
 con <- dbConnect(RSQLite::SQLite(), here("app", "sqlite", "db.sqlite"),
