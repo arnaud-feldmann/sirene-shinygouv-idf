@@ -308,6 +308,7 @@ server <- function(input, output, session) {
   })
   
   output$tbl <- DT::renderDT(
+    server = FALSE,
     datatable(
       df(),
       extensions = c("Scroller", "Buttons"),
@@ -320,6 +321,9 @@ server <- function(input, output, session) {
           $('#filtre').empty().append($('.dataTables_filter'));
           $('#paginfo').empty().append($('.dataTables_info'));
           $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
+          $(window).on('resize', function () {
+            table.columns.adjust();
+          });
         });
         "
       ),
