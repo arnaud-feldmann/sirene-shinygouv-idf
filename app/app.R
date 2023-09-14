@@ -143,7 +143,7 @@ ui <- navbarPage_dsfr(
                           }
                          });"
                          ),
-                         includeScript("pointeur.js")
+                         includeScript("centercross.js")
                        ),
                        leafletOutput("map", width = "100%", height = "100%"),
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
