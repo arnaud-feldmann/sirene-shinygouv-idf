@@ -139,7 +139,6 @@ ui <- navbarPage_dsfr(
                    div(class = "outer",
                        tags$head(
                          includeCSS("styles.css"),
-                         tags$style("strong, b { font-weight: bold; }"),
                          tags$script("
                          cercle_centre = null;
                          Shiny.addCustomMessageHandler('taille', function(taille) {
@@ -152,8 +151,7 @@ ui <- navbarPage_dsfr(
                        ),
                        leafletOutput("map", width = "100%", height = "100%"),
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                     draggable = FALSE, top = 190, left = "auto", right = 20, bottom = "auto",
-                                     width = 330, height = "auto",
+                                     draggable = FALSE,
                                      numericInput_dsfr("taille",
                                                        label = HTML("<b>Taille du cercle (m)</b>"),
                                                        value = TAILLE_DEFAUT,
@@ -170,9 +168,9 @@ ui <- navbarPage_dsfr(
                                          selectAllText = "Tout sélectionner",
                                          allOptionsSelectedText = "Tout",
                                          placeholder = "Sélection vide",
-                                         position = "top right"
-                                       ),
-                                       style = "padding-top: 12px; padding-bottom: 3px"
+                                         position = "right",
+                                         optionHeight = "30px | 40px"
+                                       )
                                      ),
                                      div(
                                        virtualSelectInput(
@@ -184,12 +182,12 @@ ui <- navbarPage_dsfr(
                                          selectAllText = "Tout sélectionner",
                                          allOptionsSelectedText = "Tout",
                                          placeholder = "Sélection vide",
-                                         position = "right"
-                                       ),
-                                       style = "padding-top: 3px; padding-bottom: 36px"
+                                         position = "right",
+                                         optionHeight = "30px | 40px"
+                                       )
                                      ),
                                      actionButton_dsfr("actualiser_map", "Go !"),
-                                     div(textOutput("position"), style = "padding-top: 20px")
+                                     div(textOutput("position"), id = "position-conteneur")
                        ),
                        
                        div(id="cite",
@@ -203,13 +201,13 @@ ui <- navbarPage_dsfr(
                                  div(
                                    HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
                                    div(id = "filtre"),
-                                   style = "padding: 10px")
+                                   id = "conteneur-filtre")
                      ),
                      column_dsfr(6L),
                      column_dsfr(3L,div(
                        HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
                        div(id = "boutons"),
-                       style = "padding: 10px")
+                       id = "conteneur-boutons")
                      )
                    ),
                    DTOutput("tbl")
