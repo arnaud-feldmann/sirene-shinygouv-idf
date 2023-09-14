@@ -263,8 +263,8 @@ server <- function(input, output, session) {
                     cercle_centre.setLatLng(event.target.getCenter());
                 });
                 L.control.zoom({ position: 'bottomright' }).addTo(this);
-                $('.leaflet-control-zoom-in').addClass('fr-btn  fr-icon-zoom-in-line').css({width:'60px'});
-                $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').css({width:'60px'});
+                $('.leaflet-control-zoom-in').addClass('fr-btn  fr-icon-zoom-in-line').empty().css({width:'60px'});
+                $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').empty().css({width:'60px'});
             }")
   })
   
