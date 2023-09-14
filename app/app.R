@@ -70,7 +70,7 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
   
   con <- dbConnect(RSQLite::SQLite(),
-                   here("retraitement", "sqlite", "db.sqlite"),
+                   here("sqlite", "db.sqlite"),
                    flags = SQLITE_RO,
                    extended_types = TRUE)
   

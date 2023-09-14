@@ -9,7 +9,7 @@ geoloc_adresse <- here("input", "GeolocalisationEtablissement_Sirene_pour_etudes
 # Sirene stock entreprises (https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/)
 stock_ent_adresse <- here("input", "StockUniteLegale_utf8.csv")
 
-con <- dbConnect(RSQLite::SQLite(), here("retraitement", "sqlite", "db.sqlite"),
+con <- dbConnect(RSQLite::SQLite(), here("app", "sqlite", "db.sqlite"),
                  extended_types = TRUE)
 
 dbExecute(con, "DELETE FROM stock_ent_idf")

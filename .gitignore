@@ -3,5 +3,5 @@
 .RData
 .Ruserdata
 /input/
-/output/
-/retraitement/
+/app/sqlite/
+
