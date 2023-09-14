@@ -169,7 +169,8 @@ ui <- navbarPage_dsfr(
                                          multiple = TRUE,
                                          selectAllText = "Tout sélectionner",
                                          allOptionsSelectedText = "Tout",
-                                         placeholder = "Sélection vide"
+                                         placeholder = "Sélection vide",
+                                         position = "top right"
                                        ),
                                        style = "padding-top: 12px; padding-bottom: 3px"
                                      ),
@@ -182,7 +183,8 @@ ui <- navbarPage_dsfr(
                                          multiple = TRUE,
                                          selectAllText = "Tout sélectionner",
                                          allOptionsSelectedText = "Tout",
-                                         placeholder = "Sélection vide"
+                                         placeholder = "Sélection vide",
+                                         position = "right"
                                        ),
                                        style = "padding-top: 3px; padding-bottom: 36px"
                                      ),
@@ -246,7 +248,7 @@ server <- function(input, output, session) {
                })
   
   output$position <- reactive({
-    sprintf("%d m autour du point %.3f %.3f", taille(), center()[1L], center()[2L])
+    sprintf("%d m autour du point (%.3f, %.3f)", taille(), center()[1L], center()[2L])
   })
   
   output$map <- renderLeaflet({
@@ -269,8 +271,8 @@ server <- function(input, output, session) {
                     cercle_centre.setLatLng(event.target.getCenter());
                 });
                 L.control.zoom({ position: 'bottomright' }).addTo(this);
-                $('.leaflet-control-zoom-in').addClass('fr-btn  fr-icon-zoom-in-line').empty().css({width:'60px'});
-                $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').empty().css({width:'60px'});
+                $('.leaflet-control-zoom-in').addClass('fr-btn  fr-icon-zoom-in-line').empty();
+                $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').empty();
             }")
   })
   
@@ -305,7 +307,7 @@ server <- function(input, output, session) {
       callback = JS(
         "table.on('init', function() {
           $('div.has-feedback input[type=search]').attr('placeholder', 'Filtrer');
-          $('.dataTables_scrollBody').addClass('fr-table').css({'z-index': 1})
+          $('.dataTables_scrollBody').addClass('fr-table');
           $('#boutons').empty().append($('div.dt-buttons'));
           $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
           $('#filtre').empty().append($('.dataTables_filter'));

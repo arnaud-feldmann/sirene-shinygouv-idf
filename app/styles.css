@@ -2,6 +2,14 @@ input[type="number"] {
   max-width: 80%;
 }
 
+.leaflet-control-zoom-in {
+  width: 60px !important;
+}
+
+.leaflet-control-zoom-out {
+  width: 60px !important;
+}
+
 div.outer {
   position: fixed;
   top: 160px;
