@@ -250,7 +250,8 @@ server <- function(input, output, session) {
   })
   
   output$map <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 8)) %>%
+    leaflet(options = leafletOptions(minZoom = 8,
+                                     zoomControl= FALSE)) %>%
       addProviderTiles(providers$Esri.WorldTopoMap) %>%
       setMaxBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
       fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
