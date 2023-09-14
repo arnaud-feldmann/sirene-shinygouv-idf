@@ -81,20 +81,7 @@ tryCatch(
     WHERE g.siret = s.siret"
     )
     dbExecute(con,
-    "CREATE INDEX idx_x_longitude
-    ON stock_etabs_geoloc_idf(x_longitude)")
-    dbExecute(con,
-    "CREATE INDEX idx_y_latitude
-    ON stock_etabs_geoloc_idf(y_latitude)")
-    dbExecute(con,
-    "CREATE INDEX idx_activitePrincipaleEtablissement
-    ON stock_etabs_geoloc_idf(activitePrincipaleEtablissement)")
-    dbExecute(con,
-    "CREATE INDEX idx_trancheEffectifsEtablissement
-    ON stock_etabs_geoloc_idf(trancheEffectifsEtablissement)")
-    dbExecute(con,
-    "CREATE INDEX idx_siren
-    ON stock_etabs_geoloc_idf(siren)")
+              "CREATE INDEX idx_query ON stock_etabs_geoloc_idf(SUBSTR(activitePrincipaleEtablissement, 1, 2), y_latitude, x_longitude, trancheEffectifsEtablissement)")
     dbExecute(con,
     "DROP TABLE geoloc_idf")
     dbExecute(con,

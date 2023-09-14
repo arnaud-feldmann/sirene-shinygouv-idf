@@ -15,7 +15,7 @@ dbExecute(con,
           trancheEffectifsUniteLegale TEXT,
           categorieJuridiqueUniteLegale TEXT,
           economieSocialeSolidaireUniteLegale TEXT,
-          primary key (siren))")
+          primary key (siren)) WITHOUT ROWID")
 
 dbExecute(con,
           "CREATE TABLE stock_etabs_geoloc_idf(
@@ -33,6 +33,6 @@ dbExecute(con,
           x_longitude REAL,
           y_latitude REAL,
           primary key (siren, nic),
-          foreign key (siren) REFERENCES stock_ent_idf (siren))")
+          foreign key (siren) REFERENCES stock_ent_idf (siren)) WITHOUT ROWID")
 
 dbDisconnect(con)
