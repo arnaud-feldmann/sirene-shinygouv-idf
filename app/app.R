@@ -172,7 +172,8 @@ ui <- navbarPage_dsfr(
                                          allOptionsSelectedText = "Tout",
                                          placeholder = "Sélection vide",
                                          position = "right",
-                                         optionHeight = "30px | 40px"
+                                         optionHeight = "30px | 40px",
+                                         optionsSelectedText = "options sélectionnées"
                                        )
                                      ),
                                      div(
@@ -186,7 +187,8 @@ ui <- navbarPage_dsfr(
                                          allOptionsSelectedText = "Tout",
                                          placeholder = "Sélection vide",
                                          position = "right",
-                                         optionHeight = "30px | 40px"
+                                         optionHeight = "30px | 40px",
+                                         optionsSelectedText = "options sélectionnées"
                                        )
                                      ),
                                      actionButton_dsfr("actualiser_map", "Go !"),
@@ -207,7 +209,7 @@ ui <- navbarPage_dsfr(
                                      div(id = "filtre"),
                                      id = "conteneur-filtre")
                        ),
-                       column_dsfr(3L,div(
+                       column_dsfr(2L,div(
                          HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
                          div(id = "boutons"),
                          id = "conteneur-boutons")

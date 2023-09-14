@@ -74,7 +74,6 @@ div.outer {
 }
 
 #conteneur-paginfo {
-  padding-right: 10px;
   display: flex;
   justify-content: center;
   padding-top: 32px;
