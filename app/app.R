@@ -16,6 +16,9 @@ library(promises)
 library(future)
 plan(multisession, workers = 4)
 
+args <- commandArgs(trailingOnly = TRUE)
+port <- if (length(args) == 0L) NULL else args[1L]
+
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
 tbl_a88_a17 <- 
@@ -380,4 +383,5 @@ server <- function(input, output, session) {
   )
 }
 
-shinyApp(ui, server)
+runApp(shinyApp(ui, server),
+       port = port)
