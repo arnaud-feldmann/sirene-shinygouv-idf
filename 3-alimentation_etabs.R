@@ -95,4 +95,7 @@ tryCatch(
   error = function(e) dbRollback(con)
 )
 
+dbExecute(con, "PRAGMA vacuum")
+dbExecute(con, "PRAGMA optimize")
+
 dbDisconnect(con)
