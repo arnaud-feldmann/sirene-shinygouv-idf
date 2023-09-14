@@ -17,7 +17,8 @@ library(future)
 plan(multisession, workers = 4)
 
 args <- commandArgs(trailingOnly = TRUE)
-port <- if (length(args) == 0L) NULL else args[1L]
+host <- if (length(args) == 0L) getOption("shiny.host", "127.0.0.1") else args[1L]
+port <- if (length(args) == 0L) getOption("shiny.port") else parse_integer(args[2L])
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
@@ -384,4 +385,5 @@ server <- function(input, output, session) {
 }
 
 runApp(shinyApp(ui, server),
+       host = host,
        port = port)
