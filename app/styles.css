@@ -69,12 +69,14 @@ div.outer {
   background-color: white !important;
 }
 
-#conteneur-filtre, #conteneur-boutons {
+#conteneur-filtre, #conteneur-boutons, #conteneur-tbl {
   padding: 10px;
 }
 
 #conteneur-paginfo {
-  padding-left: 10px;
+  padding-right: 10px;
+  display: flex;
+  justify-content: center;
   padding-top: 32px;
 }
 

@@ -79,18 +79,18 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
   
   ret <-
     dbGetQuery(con,
-             paste0(
-               "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
-               "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
-               "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale ",
-               "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent ",
-               "WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
-               paste0("'", a88, "'", collapse = ","),
-               ") AND trancheEffectifsEtablissement in (",
-               paste0("'",tranches, "'", collapse = ","),
-               ") AND x_longitude BETWEEN ", center[1L] - X_VOISINAGE, " AND ", center[1L] + X_VOISINAGE,
-               " AND y_latitude BETWEEN ", center[2L] - Y_VOISINAGE, " AND ", center[2L] + Y_VOISINAGE,
-               " AND etab.siren = ent.siren")) %>%
+               paste0(
+                 "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
+                 "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
+                 "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale ",
+                 "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent ",
+                 "WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
+                 paste0("'", a88, "'", collapse = ","),
+                 ") AND trancheEffectifsEtablissement in (",
+                 paste0("'",tranches, "'", collapse = ","),
+                 ") AND x_longitude BETWEEN ", center[1L] - X_VOISINAGE, " AND ", center[1L] + X_VOISINAGE,
+                 " AND y_latitude BETWEEN ", center[2L] - Y_VOISINAGE, " AND ", center[2L] + Y_VOISINAGE,
+                 " AND etab.siren = ent.siren")) %>%
     mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
                                       pt = center,
                                       longlat = TRUE)) %>%
@@ -145,6 +145,9 @@ ui <- navbarPage_dsfr(
                           if (cercle_centre !== null) {
                             cercle_centre.setRadius(taille);
                           }
+                         });
+                         $(document).bind('scroll',function () {
+                           window.scrollTo(0,0);
                          });"
                          ),
                          includeScript("centercross.js")
@@ -198,9 +201,6 @@ ui <- navbarPage_dsfr(
   navbarPanel_dsfr("Données",
                    div(
                      fluidRow_dsfr(
-                       column_dsfr(6L, div(
-                         div(id = "paginfo"),
-                         id = "conteneur-paginfo")),
                        column_dsfr(3L,
                                    div(
                                      HTML("<label id='filtre-label' for='filtre'><b>Filtrer</b></label>"),
@@ -211,7 +211,10 @@ ui <- navbarPage_dsfr(
                          HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
                          div(id = "boutons"),
                          id = "conteneur-boutons")
-                       )
+                       ),
+                       column_dsfr(6L, div(
+                         div(id = "paginfo"),
+                         id = "conteneur-paginfo")),
                      ),
                      div(DTOutput("tbl"),
                          id = "conteneur-tbl")
