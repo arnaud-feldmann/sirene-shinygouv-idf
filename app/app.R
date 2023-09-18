@@ -2,12 +2,8 @@ library(shiny)
 library(leaflet)
 library(RSQLite)
 library(here)
-library(dplyr)
-library(stringr)
 library(DT)
 library(sp)
-library(tidyr)
-library(readr)
 library(shinyWidgets)
 library(htmlwidgets)
 #remotes::install_github("spyrales/shinygouv")
@@ -18,41 +14,14 @@ plan(multisession, workers = 4)
 
 args <- commandArgs(trailingOnly = TRUE)
 host <- if (length(args) == 0L) getOption("shiny.host", "127.0.0.1") else args[1L]
-port <- if (length(args) == 0L) getOption("shiny.port") else parse_integer(args[2L])
+port <- if (length(args) == 0L) getOption("shiny.port") else as.integer(args[2L])
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
 
-tbl_a88_a17 <- 
-  read_csv(here("a17_a88t.csv"),
-           col_types = cols_only(A17 = col_character(),
-                                 A88 = col_character(),
-                                 A88_lbl = col_character()))
-list_a88_a17 <-
-  tbl_a88_a17 %>%
-  nest(data = c(A88, A88_lbl)) %>%
-  mutate(data = lapply(data,\(tbl) tbl %>% pull(A88) %>% setNames(tbl %>% pull(A88_lbl)))) %>%
-  (\(tbl) tbl %>% pull(data) %>% setNames(tbl %>% pull(A17)))
-
-list_tranches <-
-  c(
-    `1 ou 2 salariés` = "01",
-    `3 à 5 salariés` = "02",
-    `6 à 9 salariés` = "03",
-    `10 à 19 salariés` = "11",
-    `20 à 49 salariés` = "12",
-    `50 à 99 salariés` = "21",
-    `100 à 199 salariés` = "22",
-    `200 à 249 salariés` = "31",
-    `250 à 499 salariés` = "32",
-    `500 à 999 salariés` = "41",
-    `1 000 à 1 999 salariés` = "42",
-    `2 000 à 4 999 salariés` = "51",
-    `5 000 à 9 999 salariés` = "52",
-    `5 000 à 9 999 salariés` = "53"
-  )
-tbl_tranches <-
-  tibble(tranche_lbl = names(list_tranches),
-         tranche = list_tranches)
+list_a88_a17 <- readRDS(here("tables", "list_a88_a17.Rds"))
+df_a88_a17 <- readRDS(here("tables", "df_a88_a17.Rds"))
+list_tranches <- readRDS(here("tables", "list_tranches.Rds"))
+df_tranches <- readRDS(here("tables", "df_tranches.Rds"))
 
 BOUNDS_IDF <- c(0.04287105, 48.0487500, 4.65712895, 49.6792500)
 CENTRE_DEFAUT <-
@@ -81,56 +50,69 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
   X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
   Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
   
-  ret <-
+  res <-
     dbGetQuery(con,
                paste0(
-                 "SELECT etab.*, ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
+                 "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
+                 "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
+                 "etab.x_longitude, etab.y_latitude, ",
+                 "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
                  "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
-                 "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale ",
+                 "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
+                 "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
+                 "etab.siren || etab.nic as siret, ",
+                 "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
+                 "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
+                 "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
+                 "' ' || etab.libelleCommuneEtablissement as adresse ",
                  "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent ",
-                 "WHERE SUBSTR(activitePrincipaleEtablissement, 1, 2) in (",
+                 "WHERE A88 in (",
                  paste0("'", a88, "'", collapse = ","),
                  ") AND trancheEffectifsEtablissement in (",
                  paste0("'",tranches, "'", collapse = ","),
                  ") AND x_longitude BETWEEN ", center[1L] - X_VOISINAGE, " AND ", center[1L] + X_VOISINAGE,
                  " AND y_latitude BETWEEN ", center[2L] - Y_VOISINAGE, " AND ", center[2L] + Y_VOISINAGE,
-                 " AND etab.siren = ent.siren")) %>%
-    mutate(distance_point = spDistsN1(pts = cbind(x_longitude, y_latitude),
-                                      pt = center,
-                                      longlat = TRUE)) %>%
-    as_tibble() %>%
-    filter(distance_point <= taille/1000) %>%
-    arrange(distance_point) %>%
-    head(10000L) %>%
-    mutate(A88 = str_sub(activitePrincipaleEtablissement, 1L, 2L),
-           siret = str_c(siren, nic),
-           siret_siege = str_c(siren, nicSiegeUniteLegale)) %>%
-    left_join(tbl_tranches %>% rename(`Tranche d'effectifs (établissement)` = tranche_lbl),
-              by = c("trancheEffectifsEtablissement" = "tranche")) %>%
-    left_join(tbl_tranches %>% rename(`Tranche d'effectifs (entreprise)` = tranche_lbl),
-              by = c("trancheEffectifsUniteLegale" = "tranche")) %>%
-    left_join(tbl_a88_a17,
-              by =  "A88") %>%
-    transmute(SIRET = siret,
-              `SIRET (siège)` = siret_siege,
-              `Nom d'établissement` = enseigneEtablissement,
-              `Nom d'entreprise` = denominationUniteLegale,
-              Secteur = A88_lbl,
-              `Tranche d'effectifs (établissement)` = `Tranche d'effectifs (établissement)`,
-              `Tranche d'effectifs (entreprise)` = `Tranche d'effectifs (entreprise)`,
-              Adresse = str_c(numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
-                              codePostalEtablissement, libelleCommuneEtablissement, sep = " "),
-              CJ = categorieJuridiqueUniteLegale,
-              `Economie Sociale et Solidaire` = economieSocialeSolidaireUniteLegale,
-              `Date de création` = dateCreationEtablissement,
-              `Dénomination usuelle (établissement)` = denominationUsuelleEtablissement,
-              `Dénomination usuelle (entreprise)` = denominationUsuelleUniteLegale,
-              Longitude = x_longitude,
-              Latitude = y_latitude,
-              `Distance au point` = distance_point
-    )
+                 " AND etab.siren = ent.siren"))
+  res$distance_point <-
+    spDistsN1(pts = cbind(res$x_longitude, res$y_latitude),
+              pt = center,
+              longlat = TRUE)
+  res <- res[res$distance_point <= taille/1000,]
+  res <- res[order(res$distance_point),]
+  res <- head(res, 1000L)
+  res <- merge(x = res,
+               y = df_tranches,
+               by.x = "trancheEffectifsEtablissement",
+               by.y = "tranche",
+               all.x = TRUE)
+  colnames(res)[colnames(res) == "tranche_lbl"] <- "tr_etab"
+  res <- merge(x = res,
+               y = df_tranches,
+               by.x = "trancheEffectifsUniteLegale",
+               by.y = "tranche",
+               all.x = TRUE)
+  colnames(res)[colnames(res) == "tranche_lbl"] <- "tr_ent"
+  res <- merge(x = res,
+               y = df_a88_a17,
+               by = "A88",
+               all.x = TRUE)
+  res <- res[, c("siret", "siret_siege", "enseigneEtablissement",
+                 "denominationUniteLegale", "A88_lbl",
+                 "tr_etab", "tr_ent", "adresse", "categorieJuridiqueUniteLegale",
+                 "economieSocialeSolidaireUniteLegale",
+                 "dateCreationEtablissement", "denominationUsuelleEtablissement",
+                 "denominationUsuelleUniteLegale", "x_longitude", "y_latitude",
+                 "distance_point")]
+  colnames(res) <- c("SIRET", "SIRET (siège)", "Nom d'établissement", "Nom d'entreprise",
+                     "Secteur", "Tranche d'effectifs (établissement)",
+                     "Tranche d'effectifs (entreprise)", "Adresse",
+                     "CJ", "Economie Sociale et Solidaire", "Date de création",
+                     "Dénomination usuelle (établissement)",
+                     "Dénomination usuelle (entreprise)",
+                     "Longitude", "Latitude",
+                     "Distance au point")
   dbDisconnect(con)
-  ret
+  res
 }
 
 ui <- navbarPage_dsfr(
