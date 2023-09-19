@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-/input/
+input/*
+!input/a17_a88t.csv
 /app/sqlite/
 /app/tables/
-
