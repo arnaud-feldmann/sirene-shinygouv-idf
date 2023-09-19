@@ -79,7 +79,7 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
               longlat = TRUE)
   res <- res[res$distance_point <= taille/1000,]
   res <- res[order(res$distance_point),]
-  res <- head(res, 1000L)
+  res <- head(res, TAILLE_MAX)
   res <- merge(x = res,
                y = df_tranches,
                by.x = "trancheEffectifsEtablissement",
