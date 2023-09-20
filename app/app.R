@@ -8,6 +8,7 @@ library(shinyWidgets)
 library(htmlwidgets)
 #remotes::install_github("spyrales/shinygouv")
 library(shinygouv)
+library(htmltools)
 
 args <- commandArgs(trailingOnly = TRUE)
 host <- if (length(args) == 0L) getOption("shiny.host", "127.0.0.1") else args[1L]
@@ -271,16 +272,36 @@ server <- function(input, output, session) {
                 $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').empty();
             }")
   })
-  
   observe({
     leafletProxy("map",
-                 data = df()[,c("Longitude", "Latitude")]) %>%
+                 data = df()[, c("SIRET", "SIRET (siège)", "Nom d'établissement", "Nom d'entreprise",
+                                 "Secteur", "Tranche d'effectifs (établissement)",
+                                 "Tranche d'effectifs (entreprise)", "Adresse",
+                                 "CJ", "Economie Sociale et Solidaire", "Date de création",
+                                 "Dénomination usuelle (établissement)",
+                                 "Dénomination usuelle (entreprise)",
+                                 "Longitude", "Latitude")]) %>%
       clearGroup("etabs") %>%
       addCircles(lng = ~Longitude,
                  lat = ~Latitude,
-                 radius = 5 ,
+                 radius = 5,
                  stroke = FALSE,
                  fillOpacity = 0.8,
+                 popup = ~paste0(
+                   "<b>SIRET</b> : ", htmlEscape(SIRET),
+                   "<br><b>SIRET (siège)</b> : ", htmlEscape(`SIRET (siège)`),
+                   "<br><b>Nom d'établissement</b> : ", htmlEscape(`Nom d'établissement`),
+                   "<br><b>Nom d'entreprise</b> : ", htmlEscape(`Nom d'entreprise`),
+                   "<br><b>Secteur</b> : ", htmlEscape(`Secteur`),
+                   "<br><b>Tranche d'effectifs (établissement)</b> : ", htmlEscape(`Tranche d'effectifs (établissement)`),
+                   "<br><b>Tranche d'effectifs (entreprise)</b> : ", htmlEscape(`Tranche d'effectifs (entreprise)`),
+                   "<br><b>CJ</b> : ", htmlEscape(CJ),
+                   "<br><b>Date de création</b> : ", htmlEscape(`Date de création`),
+                   ifelse(is.na(`Economie Sociale et Solidaire`), "", paste0("<br><b>Economie Sociale et Solidaire</b> : ", htmlEscape(`Economie Sociale et Solidaire`))),
+                   ifelse(is.na(`Dénomination usuelle (établissement)`), "", paste0("<br><b>Dénomination usuelle (établissement)</b> : ", htmlEscape(`Dénomination usuelle (établissement)`))),
+                   ifelse(is.na(`Dénomination usuelle (entreprise)`), "", paste0("<br><b>Dénomination usuelle (entreprise)</b> : ", htmlEscape(`Dénomination usuelle (entreprise)`))),
+                   "<br><br>", htmlEscape(Adresse)
+                 ),
                  group = "etabs")
   })
   
