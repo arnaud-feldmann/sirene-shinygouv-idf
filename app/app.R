@@ -36,29 +36,41 @@ MULTIPLE_ANGLE_Y <- 110000
 # de sorte à ce qu'on ne manque aucun établissement en faisant le rond à
 # l'intérieur après la requête (plus simple) de carré.
 
+get_prepared_query_singleton <- (
+  function() {
+    res <- NULL
+    function(con) {
+      if (is.null(res)) {
+        res <- dbSendQuery(con,
+                           paste(
+                             "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
+                             "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
+                             "etab.x_longitude, etab.y_latitude, ",
+                             "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
+                             "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
+                             "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
+                             "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
+                             "etab.siren || etab.nic as siret, ",
+                             "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
+                             "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
+                             "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
+                             "' ' || etab.libelleCommuneEtablissement as adresse ",
+                             "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent, A88_TEMP as s1, TRA_TEMP as s2 ",
+                             "WHERE A88 = s1.sel AND trancheEffectifsEtablissement = s2.sel ",
+                             "AND x_longitude BETWEEN ? AND ? ",
+                             "AND y_latitude BETWEEN ? AND ? ",
+                             "AND etab.siren = ent.siren"))
+      }
+      res
+    }
+  }
+)()
+
 get_query <- function(con,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
   X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
   Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
-  pq <- dbSendQuery(con,
-                    paste(
-                      "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
-                      "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
-                      "etab.x_longitude, etab.y_latitude, ",
-                      "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
-                      "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
-                      "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
-                      "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
-                      "etab.siren || etab.nic as siret, ",
-                      "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
-                      "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
-                      "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
-                      "' ' || etab.libelleCommuneEtablissement as adresse ",
-                      "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent, A88_TEMP as s1, TRA_TEMP as s2 ",
-                      "WHERE A88 = s1.sel AND trancheEffectifsEtablissement = s2.sel ",
-                      "AND x_longitude BETWEEN ? AND ? ",
-                      "AND y_latitude BETWEEN ? AND ? ",
-                      "AND etab.siren = ent.siren"))
+  pq <- get_prepared_query_singleton(con)
   res <- dbBind(pq, list(center[1L] - X_VOISINAGE,
                          center[1L] + X_VOISINAGE,
                          center[2L] - Y_VOISINAGE,
