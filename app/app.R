@@ -14,6 +14,7 @@ host <- if (length(args) == 0L) getOption("shiny.host", "127.0.0.1") else args[1
 port <- if (length(args) == 0L) getOption("shiny.port") else as.integer(args[2L])
 
 `%||%` <- function (x, y) if (is.null(x)) y else x
+`%^^%` <- function (x, y) if (is.null(x) || is.na(x) || is.nan(x)) y else x
 
 list_a88_a17 <- readRDS(here("tables", "list_a88_a17.Rds"))
 df_a88_a17 <- readRDS(here("tables", "df_a88_a17.Rds"))
@@ -232,7 +233,7 @@ server <- function(input, output, session) {
   onSessionEnded(function() dbDisconnect(session$userData$con), session = session)
   
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
-  taille <- reactive(input$taille %||% TAILLE_DEFAUT |> min(TAILLE_MAX + 1L))
+  taille <- reactive(input$taille %^^% TAILLE_DEFAUT |> min(TAILLE_MAX) |> max(0L))
   
   df <- reactiveVal(value = get_query(session$userData$con))
   
@@ -295,9 +296,12 @@ server <- function(input, output, session) {
   })
   
   observe({
-    if (taille() > TAILLE_MAX) {
+    if (isTRUE(input$taille > TAILLE_MAX)) {
       output$avertissement <- renderText("La taille maximale est de 10 km !")
       updateNumericInput_dsfr(inputId = "taille", value = TAILLE_MAX)
+    } else if (isTRUE(input$taille < 0L)) {
+      output$avertissement <- renderText("La taille doit être positive !")
+      updateNumericInput_dsfr(inputId = "taille", value = 0L)
     } else session$sendCustomMessage("taille", taille())
   })
   
