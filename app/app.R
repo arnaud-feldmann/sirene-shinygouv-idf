@@ -8,9 +8,6 @@ library(shinyWidgets)
 library(htmlwidgets)
 #remotes::install_github("spyrales/shinygouv")
 library(shinygouv)
-library(promises)
-library(future)
-plan(multisession, workers = 4)
 
 args <- commandArgs(trailingOnly = TRUE)
 host <- if (length(args) == 0L) getOption("shiny.host", "127.0.0.1") else args[1L]
@@ -39,40 +36,34 @@ MULTIPLE_ANGLE_Y <- 110000
 # de sorte à ce qu'on ne manque aucun établissement en faisant le rond à
 # l'intérieur après la requête (plus simple) de carré.
 
-get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
+get_query <- function(con,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
-  
-  con <- dbConnect(RSQLite::SQLite(),
-                   here("sqlite", "db.sqlite"),
-                   flags = SQLITE_RO,
-                   extended_types = TRUE)
-  
   X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
   Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
-  
-  res <-
-    dbGetQuery(con,
-               paste0(
-                 "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
-                 "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
-                 "etab.x_longitude, etab.y_latitude, ",
-                 "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
-                 "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
-                 "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
-                 "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
-                 "etab.siren || etab.nic as siret, ",
-                 "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
-                 "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
-                 "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
-                 "' ' || etab.libelleCommuneEtablissement as adresse ",
-                 "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent ",
-                 "WHERE A88 in (",
-                 paste0("'", a88, "'", collapse = ","),
-                 ") AND trancheEffectifsEtablissement in (",
-                 paste0("'",tranches, "'", collapse = ","),
-                 ") AND x_longitude BETWEEN ", center[1L] - X_VOISINAGE, " AND ", center[1L] + X_VOISINAGE,
-                 " AND y_latitude BETWEEN ", center[2L] - Y_VOISINAGE, " AND ", center[2L] + Y_VOISINAGE,
-                 " AND etab.siren = ent.siren"))
+  pq <- dbSendQuery(con,
+                    paste(
+                      "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
+                      "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
+                      "etab.x_longitude, etab.y_latitude, ",
+                      "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
+                      "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
+                      "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
+                      "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
+                      "etab.siren || etab.nic as siret, ",
+                      "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
+                      "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
+                      "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
+                      "' ' || etab.libelleCommuneEtablissement as adresse ",
+                      "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent, A88_TEMP as s1, TRA_TEMP as s2 ",
+                      "WHERE A88 = s1.sel AND trancheEffectifsEtablissement = s2.sel ",
+                      "AND x_longitude BETWEEN ? AND ? ",
+                      "AND y_latitude BETWEEN ? AND ? ",
+                      "AND etab.siren = ent.siren"))
+  res <- dbBind(pq, list(center[1L] - X_VOISINAGE,
+                         center[1L] + X_VOISINAGE,
+                         center[2L] - Y_VOISINAGE,
+                         center[2L] + Y_VOISINAGE))
+  res <- dbFetch(res)
   res$distance_point <-
     spDistsN1(pts = cbind(res$x_longitude, res$y_latitude),
               pt = center,
@@ -111,7 +102,7 @@ get_query <- function(a88 = A88_SEL_DEFAUT, tranches = TRANCHES_SEL_DEFAUT,
                      "Dénomination usuelle (entreprise)",
                      "Longitude", "Latitude",
                      "Distance au point")
-  dbDisconnect(con)
+  dbClearResult(pq)
   res
 }
 
@@ -211,35 +202,46 @@ ui <- navbarPage_dsfr(
   )
 )
 
+session_init <- function() {
+  con <-
+    dbConnect(RSQLite::SQLite(),
+              here("sqlite", "db.sqlite"),
+              flags = SQLITE_RO,
+              extended_types = TRUE)
+  dbWriteTable(con, "A88_TEMP", data.frame(sel = A88_SEL_DEFAUT), overwrite = TRUE, temporary = TRUE)
+  dbWriteTable(con, "TRA_TEMP", data.frame(sel = TRANCHES_SEL_DEFAUT), overwrite = TRUE, temporary = TRUE)
+  con
+}
+
 server <- function(input, output, session) {
+  
+  session$userData$con <- session_init()
   
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
   taille <- reactive(input$taille %||% TAILLE_DEFAUT |> min(TAILLE_MAX + 1L))
-  a88 <- reactive(input$a88 %||% A88_SEL_DEFAUT)
-  tranches <- reactive(input$tranches %||% TRANCHES_SEL_DEFAUT)
+
+  df <- reactiveVal(value = get_query(session$userData$con))
   
-  df <- reactiveVal(value = get_query())
+  observe({
+    dbWriteTable(session$userData$con, "A88_TEMP", data.frame(sel = input$a88 %||% character()), overwrite = TRUE, temporary = TRUE)
+  })
+  observe({
+    dbWriteTable(session$userData$con, "TRA_TEMP", data.frame(sel = input$tranches %||% character()), overwrite = TRUE, temporary = TRUE)
+  })
   
   observeEvent(input$actualiser_map,
                {
-                 a88 <- a88()
-                 tranches <- tranches()
                  center <- center()
                  taille <- taille()
-                 future_promise({
-                   get_query(a88, tranches, center, taille)
-                 }) %...>%
-                   df %...>%
-                   (function(x) {
-                     if (NROW(df()) >= 10000L) {
-                       shiny::showModal(
-                         shiny::modalDialog(title = "Trop de résultats !",
-                                            "La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus",
-                                            easyClose = TRUE,
-                                            footer = NULL),
-                         session)
-                     }
-                   })
+                 df(get_query(session$userData$con, center, taille))
+                 if (NROW(df()) >= 10000L) {
+                   shiny::showModal(
+                     shiny::modalDialog(title = "Trop de résultats !",
+                                        "La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus",
+                                        easyClose = TRUE,
+                                        footer = NULL),
+                     session)
+                 }
                })
   
   output$position <- reactive({
