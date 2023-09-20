@@ -22,6 +22,7 @@ COPY ./input/a17_a88t.csv ./input/a17_a88t.csv
 RUN Rscript 0-telecharger_input.R && Rscript 1-definition_schemas.R && Rscript 2-alimentation_entreprises.R && Rscript 3-alimentation_etabs.R && Rscript 4-tables.R
 
 FROM rhub/r-minimal as APP_EXEC
+LABEL org.opencontainers.image.source="https://github.com/arnaud-feldmann/sirene-shinygouv-idf"
 WORKDIR /app
 COPY --from=APP_RENV /app .
 COPY ./app/app.R ./app/centercross.js ./app/styles.css ./
