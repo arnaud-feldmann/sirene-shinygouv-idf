@@ -37,41 +37,29 @@ MULTIPLE_ANGLE_Y <- 110000
 # de sorte à ce qu'on ne manque aucun établissement en faisant le rond à
 # l'intérieur après la requête (plus simple) de carré.
 
-get_prepared_query_singleton <- (
-  function() {
-    res <- NULL
-    function(con) {
-      if (is.null(res)) {
-        res <- dbSendQuery(con,
-                           paste(
-                             "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
-                             "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
-                             "etab.x_longitude, etab.y_latitude, ",
-                             "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
-                             "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
-                             "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
-                             "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
-                             "etab.siren || etab.nic as siret, ",
-                             "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
-                             "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
-                             "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
-                             "' ' || etab.libelleCommuneEtablissement as adresse ",
-                             "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent, A88_TEMP as s1, TRA_TEMP as s2 ",
-                             "WHERE A88 = s1.sel AND trancheEffectifsEtablissement = s2.sel ",
-                             "AND x_longitude BETWEEN ? AND ? ",
-                             "AND y_latitude BETWEEN ? AND ? ",
-                             "AND etab.siren = ent.siren"))
-      }
-      res
-    }
-  }
-)()
-
 get_query <- function(con,
                       center = CENTRE_DEFAUT, taille = TAILLE_DEFAUT) {
   X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
   Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
-  pq <- get_prepared_query_singleton(con)
+  pq <- dbSendQuery(con,
+                    paste(
+                      "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
+                      "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
+                      "etab.x_longitude, etab.y_latitude, ",
+                      "ent.denominationUniteLegale, ent.trancheEffectifsUniteLegale, ",
+                      "ent.categorieJuridiqueUniteLegale, ent.economieSocialeSolidaireUniteLegale, ",
+                      "ent.nicSiegeUniteLegale, ent.denominationUsuelleUniteLegale, ",
+                      "SUBSTR(etab.activitePrincipaleEtablissement, 1, 2) as A88, ",
+                      "etab.siren || etab.nic as siret, ",
+                      "etab.siren || ent.nicSiegeUniteLegale as siret_siege, ",
+                      "etab.numeroVoieEtablissement || ' ' || etab.typeVoieEtablissement || ' ' || ",
+                      "etab.libelleVoieEtablissement || ' ' || etab.codePostalEtablissement || ",
+                      "' ' || etab.libelleCommuneEtablissement as adresse ",
+                      "FROM stock_etabs_geoloc_idf as etab, stock_ent_idf as ent, A88_TEMP as s1, TRA_TEMP as s2 ",
+                      "WHERE A88 = s1.sel AND trancheEffectifsEtablissement = s2.sel ",
+                      "AND x_longitude BETWEEN ? AND ? ",
+                      "AND y_latitude BETWEEN ? AND ? ",
+                      "AND etab.siren = ent.siren"))
   res <- dbBind(pq, list(center[1L] - X_VOISINAGE,
                          center[1L] + X_VOISINAGE,
                          center[2L] - Y_VOISINAGE,
@@ -230,6 +218,7 @@ session_init <- function() {
 server <- function(input, output, session) {
   
   session$userData$con <- session_init()
+  
   onSessionEnded(function() dbDisconnect(session$userData$con), session = session)
   
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
@@ -305,13 +294,14 @@ server <- function(input, output, session) {
     } else session$sendCustomMessage("taille", taille())
   })
   
-  output$tbl <- DT::renderDT(
-    server = FALSE,
-    datatable(
-      df(),
-      extensions = c("Scroller", "Buttons"),
-      callback = JS(
-        "table.on('init', function() {
+  output$tbl <- suppressWarnings(
+    DT::renderDT(
+      server = FALSE,
+      datatable(
+        df(),
+        extensions = c("Scroller", "Buttons"),
+        callback = JS(
+          "table.on('init', function() {
           $('div.has-feedback input[type=search]').attr('placeholder', 'Filtrer');
           $('.dataTables_scrollBody').addClass('fr-table');
           $('#boutons').empty().append($('div.dt-buttons'));
@@ -324,49 +314,50 @@ server <- function(input, output, session) {
           });
         });
         "
-      ),
-      selection = "none",
-      rownames = FALSE,
-      filter = "top",
-      options = list(
-        autoWidth = TRUE,
-        columnDefs = list(list(width = '80px', targets = c(7L,8L))),
-        dom = 'Bfrtip',
-        deferRender = TRUE,
-        scrollX = TRUE,
-        scrollY = 350,
-        scroller = TRUE,
-        language = list(
-          url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
-          search = ""
         ),
-        buttons = list(
-          list(
-            extend = "copy",
-            charset = "utf-8",
-            bom = TRUE,
-            exportOptions = list(
-              modifier = list(
-                search = "applied"
-              )
-            )
+        selection = "none",
+        rownames = FALSE,
+        filter = "top",
+        options = list(
+          autoWidth = TRUE,
+          columnDefs = list(list(width = '80px', targets = c(7L,8L))),
+          dom = 'Bfrtip',
+          deferRender = TRUE,
+          scrollX = TRUE,
+          scrollY = 350,
+          scroller = TRUE,
+          language = list(
+            url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
+            search = ""
           ),
-          list(
-            extend = "csv",
-            charset = "utf-8",
-            bom = TRUE,
-            exportOptions = list(
-              modifier = list(
-                search = "applied"
+          buttons = list(
+            list(
+              extend = "copy",
+              charset = "utf-8",
+              bom = TRUE,
+              exportOptions = list(
+                modifier = list(
+                  search = "applied"
+                )
               )
-            )
-          ),
-          list(
-            extend = "excel",
-            charset = "utf-8",
-            exportOptions = list(
-              modifier = list(
-                search = "applied"
+            ),
+            list(
+              extend = "csv",
+              charset = "utf-8",
+              bom = TRUE,
+              exportOptions = list(
+                modifier = list(
+                  search = "applied"
+                )
+              )
+            ),
+            list(
+              extend = "excel",
+              charset = "utf-8",
+              exportOptions = list(
+                modifier = list(
+                  search = "applied"
+                )
               )
             )
           )
