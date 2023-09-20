@@ -73,6 +73,10 @@ div.outer {
   padding: 10px;
 }
 
+#avertissement  {
+  color: red;
+}
+
 #conteneur-paginfo {
   display: flex;
   justify-content: center;

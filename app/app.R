@@ -169,7 +169,8 @@ ui <- navbarPage_dsfr(
                                        )
                                      ),
                                      actionButton_dsfr("actualiser_map", "Go !"),
-                                     div(textOutput("position"), id = "position-conteneur")
+                                     div(textOutput("position"), id = "position-conteneur"),
+                                     div(textOutput("avertissement"), id = "avertissement-conteneur")
                        ),
                        
                        div(id="cite",
@@ -216,10 +217,11 @@ session_init <- function() {
 server <- function(input, output, session) {
   
   session$userData$con <- session_init()
+  onSessionEnded(function() dbDisconnect(session$userData$con), session = session)
   
   center <- reactive(c(input$map_center$lng, input$map_center$lat) %||% CENTRE_DEFAUT)
   taille <- reactive(input$taille %||% TAILLE_DEFAUT |> min(TAILLE_MAX + 1L))
-
+  
   df <- reactiveVal(value = get_query(session$userData$con))
   
   observe({
@@ -235,13 +237,8 @@ server <- function(input, output, session) {
                  taille <- taille()
                  df(get_query(session$userData$con, center, taille))
                  if (NROW(df()) >= 10000L) {
-                   shiny::showModal(
-                     shiny::modalDialog(title = "Trop de résultats !",
-                                        "La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus",
-                                        easyClose = TRUE,
-                                        footer = NULL),
-                     session)
-                 }
+                   output$avertissement <- renderText("La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus")
+                 } else output$avertissement <- renderText("")
                })
   
   output$position <- reactive({
@@ -287,12 +284,7 @@ server <- function(input, output, session) {
   
   observe({
     if (taille() > TAILLE_MAX) {
-      shiny::showModal(
-        shiny::modalDialog(title = "Taille maximale",
-                           "La taille maximale est de 10 km !",
-                           easyClose = TRUE,
-                           footer = NULL),
-        session)
+      output$avertissement <- renderText("La taille maximale est de 10 km !")
       updateNumericInput_dsfr(inputId = "taille", value = TAILLE_MAX)
     } else session$sendCustomMessage("taille", taille())
   })
