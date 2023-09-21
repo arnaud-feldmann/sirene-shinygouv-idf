@@ -1099,7 +1099,7 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "shinygouv",
       "RemoteUsername": "spyrales",
-      "RemoteRef": "HEAD",
+      "RemoteRef": "ba026fff9902518672bca43a88565adcc34acfe4",
       "RemoteSha": "ba026fff9902518672bca43a88565adcc34acfe4",
       "Requirements": [
         "XML",
