@@ -30,4 +30,5 @@ RUN mkdir tables && mkdir sqlite
 COPY --from=ALI_EXEC /ali/app/tables/df_a88_a17.Rds /ali/app/tables/list_a88_a17.Rds ali/app/tables/df_tranches.Rds /ali/app/tables/list_tranches.Rds ./tables/
 COPY --from=ALI_EXEC /ali/app/sqlite/db.sqlite ./sqlite/
 RUN apk add libxml2-dev
+EXPOSE 3838	
 CMD ["Rscript", "app.R", "0.0.0.0", "3838"] 
