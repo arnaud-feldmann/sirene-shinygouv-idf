@@ -21,7 +21,7 @@ strong, b {
   padding-bottom: 36px;
 }
 
-#position-conteneur {
+#position-nombre {
   padding-top: 20px;
 }
 
@@ -83,3 +83,6 @@ div.outer {
   padding-top: 32px;
 }
 
+#conteneur-donnees {
+  visibility: hidden;
+}

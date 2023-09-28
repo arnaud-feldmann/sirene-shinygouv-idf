@@ -28,6 +28,15 @@ CENTRE_DEFAUT <-
     (BOUNDS_IDF[1L] + BOUNDS_IDF[3L]) / 2,
     (BOUNDS_IDF[2L] + BOUNDS_IDF[4L]) / 2
   )
+etendue <-
+  c(
+    BOUNDS_IDF[3L] - BOUNDS_IDF[1L],
+    BOUNDS_IDF[4L] - BOUNDS_IDF[2L]
+  )
+MAX_BOUNDS <- c(BOUNDS_IDF[1L] - etendue[1L],
+                BOUNDS_IDF[2L] - etendue[2L],
+                BOUNDS_IDF[3L] + etendue[1L],
+                BOUNDS_IDF[4L] + etendue[2L])
 TAILLE_DEFAUT <- 500L
 TAILLE_MAX <- 10000L
 TRANCHES_SEL_DEFAUT <- unname(list_tranches)
@@ -43,7 +52,7 @@ get_query <- function(con,
   X_VOISINAGE <- taille / MULTIPLE_ANGLE_X
   Y_VOISINAGE <- taille / MULTIPLE_ANGLE_Y
   pq <- dbSendQuery(con,
-                    paste(
+                    paste0(
                       "SELECT etab.enseigneEtablissement, etab.trancheEffectifsEtablissement, ",
                       "etab.dateCreationEtablissement, etab.denominationUsuelleEtablissement, ",
                       "etab.x_longitude, etab.y_latitude, ",
@@ -108,6 +117,78 @@ get_query <- function(con,
   res
 }
 
+make_dt <- function(df) {
+  dt <-
+    datatable(
+      df,
+      extensions = c("Scroller", "Buttons"),
+      callback = JS(
+        "table.on('init', function() {
+          $('.dataTables_scrollBody').addClass('fr-table');
+          $('#boutons').empty().append($('div.dt-buttons'));
+          $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
+          $('#filtre').empty().append($('.dataTables_filter'));
+          $('#paginfo').empty().append($('.dataTables_info'));
+          $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
+          $('#conteneur-donnees').css('visibility','visible');
+          $(window).on('resize', function () {
+            table.columns.adjust();
+          });
+        });
+        "
+      ),
+      selection = "none",
+      rownames = FALSE,
+      filter = "top",
+      options = list(
+        autoWidth = TRUE,
+        columnDefs = list(list(width = '80px', targets = c(7L,8L))),
+        dom = 'Bfrtip',
+        deferRender = TRUE,
+        scrollX = TRUE,
+        scrollY = 350,
+        scroller = TRUE,
+        language = list(
+          url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
+          search = ""
+        ),
+        buttons = list(
+          list(
+            extend = "copy",
+            charset = "utf-8",
+            bom = TRUE,
+            exportOptions = list(
+              modifier = list(
+                search = "applied"
+              )
+            )
+          ),
+          list(
+            extend = "csv",
+            charset = "utf-8",
+            bom = TRUE,
+            exportOptions = list(
+              modifier = list(
+                search = "applied"
+              )
+            )
+          ),
+          list(
+            extend = "excel",
+            charset = "utf-8",
+            exportOptions = list(
+              modifier = list(
+                search = "applied"
+              )
+            )
+          )
+        )
+      )
+    )
+  dt$x$filterHTML <- gsub("\"All\"","\"Filtrer\"",dt$x$filterHTML)
+  dt
+}
+
 ui <- navbarPage_dsfr(
   title = "Etablissements d'Île-de-France",
   header = header_dsfr(intitule = "Drieets",
@@ -152,6 +233,7 @@ ui <- navbarPage_dsfr(
                                          placeholder = "Sélection vide",
                                          position = "right",
                                          optionHeight = "30px | 40px",
+                                         optionSelectedText = "option sélectionnée",
                                          optionsSelectedText = "options sélectionnées"
                                        )
                                      ),
@@ -167,10 +249,12 @@ ui <- navbarPage_dsfr(
                                          placeholder = "Sélection vide",
                                          position = "right",
                                          optionHeight = "30px | 40px",
+                                         optionSelectedText = "option sélectionnée",
                                          optionsSelectedText = "options sélectionnées"
                                        )
                                      ),
                                      actionButton_dsfr("actualiser_map", "Go !"),
+                                     div(textOutput("nombre"), id = "nombre-conteneur"),
                                      div(textOutput("position"), id = "position-conteneur"),
                                      div(textOutput("avertissement"), id = "avertissement-conteneur")
                        ),
@@ -201,7 +285,8 @@ ui <- navbarPage_dsfr(
                      div(DTOutput("tbl"),
                          id = "conteneur-tbl")
                    ),
-                   class = "fr-container--fluid"
+                   class = "fr-container--fluid",
+                   id = "conteneur-donnees"
   )
 )
 
@@ -239,11 +324,13 @@ server <- function(input, output, session) {
                  center <- center()
                  taille <- taille()
                  df(get_query(session$userData$con, center, taille))
+                 
                  if (NROW(df()) >= 10000L) {
                    output$avertissement <- renderText("La recherche a plus de 10000 résultats, seuls les 10000 les plus proches ont été retenus")
                  } else output$avertissement <- renderText("")
                })
   
+  output$nombre <- renderText(sprintf("Affichage de %d entrées", NROW(df())))
   output$position <- reactive({
     sprintf("%d m autour du point (%.3f, %.3f)", taille(), center()[1L], center()[2L])
   })
@@ -252,7 +339,7 @@ server <- function(input, output, session) {
     leaflet(options = leafletOptions(minZoom = 8,
                                      zoomControl= FALSE)) %>%
       addProviderTiles(providers$Esri.WorldTopoMap) %>%
-      setMaxBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
+      setMaxBounds(MAX_BOUNDS[1L], MAX_BOUNDS[2L], MAX_BOUNDS[3L], MAX_BOUNDS[4L]) %>%
       fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
       onRender("
             function(el,x) {
@@ -318,72 +405,7 @@ server <- function(input, output, session) {
   output$tbl <- suppressWarnings(
     DT::renderDT(
       server = FALSE,
-      datatable(
-        df(),
-        extensions = c("Scroller", "Buttons"),
-        callback = JS(
-          "table.on('init', function() {
-          $('div.has-feedback input[type=search]').attr('placeholder', 'Filtrer');
-          $('.dataTables_scrollBody').addClass('fr-table');
-          $('#boutons').empty().append($('div.dt-buttons'));
-          $('div.dt-buttons').children().removeAttr('class').addClass('fr-btn fr-p1-w');
-          $('#filtre').empty().append($('.dataTables_filter'));
-          $('#paginfo').empty().append($('.dataTables_info'));
-          $('.dataTables_filter > label > input[type=search]').addClass('fr-input');
-          $(window).on('resize', function () {
-            table.columns.adjust();
-          });
-        });
-        "
-        ),
-        selection = "none",
-        rownames = FALSE,
-        filter = "top",
-        options = list(
-          autoWidth = TRUE,
-          columnDefs = list(list(width = '80px', targets = c(7L,8L))),
-          dom = 'Bfrtip',
-          deferRender = TRUE,
-          scrollX = TRUE,
-          scrollY = 350,
-          scroller = TRUE,
-          language = list(
-            url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
-            search = ""
-          ),
-          buttons = list(
-            list(
-              extend = "copy",
-              charset = "utf-8",
-              bom = TRUE,
-              exportOptions = list(
-                modifier = list(
-                  search = "applied"
-                )
-              )
-            ),
-            list(
-              extend = "csv",
-              charset = "utf-8",
-              bom = TRUE,
-              exportOptions = list(
-                modifier = list(
-                  search = "applied"
-                )
-              )
-            ),
-            list(
-              extend = "excel",
-              charset = "utf-8",
-              exportOptions = list(
-                modifier = list(
-                  search = "applied"
-                )
-              )
-            )
-          )
-        )
-      )
+      make_dt(df())
     )
   )
 }
