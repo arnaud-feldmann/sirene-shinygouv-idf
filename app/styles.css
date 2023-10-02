@@ -73,13 +73,22 @@ div.outer {
   padding: 10px;
 }
 
+.ligne-entete {
+  height: 80px !important;
+}
+
+#conteneur-tbl {
+  width: 100vw;
+  height: calc(100vh - 225px);
+}
+
 #avertissement  {
   color: red;
 }
 
 #conteneur-paginfo {
   display: flex;
-  justify-content: center;
+  justify-content: left;
   padding-top: 32px;
 }
 
