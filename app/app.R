@@ -140,14 +140,18 @@ make_dt <- function(df) {
       selection = "none",
       rownames = FALSE,
       filter = "top",
+      plugins = "scrollResize",
       options = list(
         autoWidth = TRUE,
         columnDefs = list(list(width = '80px', targets = c(7L,8L))),
         dom = 'Bfrtip',
         deferRender = TRUE,
-        scrollX = TRUE,
-        scrollY = 350,
         scroller = TRUE,
+        scrollResize = TRUE,
+        scrollX = TRUE,
+        scrollY = "100px",
+        scrollCollapse = TRUE,
+        paging = TRUE,
         language = list(
           url = "//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json",
           search = ""
@@ -273,16 +277,17 @@ ui <- navbarPage_dsfr(
                                      div(id = "filtre"),
                                      id = "conteneur-filtre")
                        ),
-                       column_dsfr(2L,div(
+                       column_dsfr(5L,div(
                          HTML("<label id='boutons-label' for='boutons'><b>Télécharger</b></label>"),
                          div(id = "boutons"),
                          id = "conteneur-boutons")
                        ),
-                       column_dsfr(6L, div(
+                       column_dsfr(4L, div(
                          div(id = "paginfo"),
                          id = "conteneur-paginfo")),
+                       class = "ligne-entete"
                      ),
-                     div(DTOutput("tbl"),
+                     div(DTOutput("tbl", height = "100%"),
                          id = "conteneur-tbl")
                    ),
                    class = "fr-container--fluid",
