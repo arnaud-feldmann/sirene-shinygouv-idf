@@ -50,5 +50,5 @@ jobs:
         kubectl config use-context apiserver.kub.sspcloud.fr
     - name: 'Upgrade helm'
       run: |
-        helm dependency build 
+        helm dependency build ./helm
         helm upgrade --reuse-values --set shiny.image.tag=20231003 sirene-shinygouv-idf ./helm
