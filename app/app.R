@@ -215,9 +215,8 @@ ui <- navbarPage_dsfr(
                          });"
                          ),
                          includeScript("centercross.js"),
-                         tags$link(rel = "stylesheet",
-                                   href = "https://unpkg.com/leaflet-geosearch@3.9.0/dist/geosearch.css"),
-                         tags$script(src="https://unpkg.com/leaflet-geosearch@3.9.0/dist/geosearch.umd.js")
+                         includeCSS("geosearch.css"),
+                         includeScript("geosearch-umd.js")
                        ),
                        leafletOutput("map", width = "100%", height = "100%"),
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
