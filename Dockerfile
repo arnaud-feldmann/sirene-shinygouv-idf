@@ -25,7 +25,7 @@ FROM rhub/r-minimal as APP_EXEC
 LABEL org.opencontainers.image.source="https://github.com/arnaud-feldmann/sirene-shinygouv-idf"
 WORKDIR /app
 COPY --from=APP_RENV /app .
-COPY ./app/app.R ./app/centercross.js ./app/styles.css ./
+COPY ./app/app.R ./app/centercross.js ./app/styles.css ./app/geosearch.css ./app/geosearch-umd.js ./
 RUN mkdir tables && mkdir sqlite
 COPY --from=ALI_EXEC /ali/app/tables/df_a88_a17.Rds /ali/app/tables/list_a88_a17.Rds ali/app/tables/df_tranches.Rds /ali/app/tables/list_tranches.Rds ./tables/
 COPY --from=ALI_EXEC /ali/app/sqlite/db.sqlite ./sqlite/
