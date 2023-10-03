@@ -1,0 +1,14 @@
+shiny:
+  image:
+    repository: ghcr.io/arnaud-feldmann/sirene-shinygouv-idf 
+    tag: "latest"
+    pullPolicy: Always
+  ingress:
+    enabled: true
+    hostname: sirene-shinygouv-idf.lab.sspcloud.fr
+  s3:
+    enabled: false
+  postgresql:
+    enabled: false
+  resources: {}
+
