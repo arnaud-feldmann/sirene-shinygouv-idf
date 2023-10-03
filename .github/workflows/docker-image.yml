@@ -12,6 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: 'Install kubectl'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y apt-transport-https ca-certificates curl
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        sudo apt-get update
+        sudo apt-get install -y kubectl
+    - name: 'Install helm'
+      run: |
+        curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+        sudo apt-get install apt-transport-https --yes
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+        sudo apt-get update
+        sudo apt-get install helm
     - uses: actions/checkout@v3
     - name: 'Login to GitHub Container Registry'
       uses: docker/login-action@v3
@@ -23,3 +38,17 @@ jobs:
       run: |
         docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d')
         docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d')
+    - name: 'Login to kubernetes'
+      env:
+        KUBE_NAME: ${{ secrets.KUBE_NAME }}
+        KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+        KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      run: |
+        kubectl config set-cluster apiserver.kub.sspcloud.fr --server=https://apiserver.kub.sspcloud.fr --insecure-skip-tls-verify=true
+        kubectl config set-credentials $KUBE_NAME --token $KUBE_TOKEN
+        kubectl config set-context apiserver.kub.sspcloud.fr --user=$KUBE_NAME --cluster=apiserver.kub.sspcloud.fr --namespace=$KUBE_NAMESPACE
+        kubectl config use-context apiserver.kub.sspcloud.fr
+    - name: 'Upgrade helm'
+      run: |
+        helm dependency build 
+        helm upgrade --reuse-values --set shiny.image.tag=20231003 sirene-shinygouv-idf ./helm
