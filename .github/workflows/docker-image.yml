@@ -36,8 +36,8 @@ jobs:
         password: ${{secrets.GITHUB_TOKEN}}
     - name: Build the Docker image
       run: |
-        docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d')
-        docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d')
+        docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d%H%M')
+        docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d%H%M')
     - name: 'Login to kubernetes'
       env:
         KUBE_NAME: ${{ secrets.KUBE_NAME }}
@@ -51,4 +51,4 @@ jobs:
     - name: 'Upgrade helm'
       run: |
         helm dependency build ./helm
-        helm upgrade --reuse-values --set shiny.image.tag=20231003 sirene-shinygouv-idf ./helm
+        helm upgrade --reuse-values --set shiny.image.tag=$(date +'%Y%m%d%H%M') sirene-shinygouv-idf ./helm
