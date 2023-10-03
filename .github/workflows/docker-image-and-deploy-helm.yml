@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
     - name: 'Install kubectl'
       run: |
         sudo apt-get update
@@ -36,8 +39,8 @@ jobs:
         password: ${{secrets.GITHUB_TOKEN}}
     - name: Build the Docker image
       run: |
-        docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d%H%M')
-        docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:$(date +'%Y%m%d%H%M')
+        docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:${{ steps.date.outputs.date }}
+        docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:${{ steps.date.outputs.date }}
     - name: 'Login to kubernetes'
       env:
         KUBE_NAME: ${{ secrets.KUBE_NAME }}
@@ -51,4 +54,4 @@ jobs:
     - name: 'Upgrade helm'
       run: |
         helm dependency build ./helm
-        helm upgrade --reuse-values --set shiny.image.tag=$(date +'%Y%m%d%H%M') sirene-shinygouv-idf ./helm
+        helm upgrade --reuse-values --set shiny.image.tag=${{ steps.date.outputs.date }} sirene-shinygouv-idf ./helm
