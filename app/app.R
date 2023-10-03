@@ -366,6 +366,7 @@ server <- function(input, output, session) {
                     addressdetails: 0,
                     viewbox: '%f,%f,%f,%f',
                     bounded: 1,
+                    dedupe: 1,
                   },
                 });
                 
