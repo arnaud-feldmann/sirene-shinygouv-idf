@@ -348,7 +348,7 @@ server <- function(input, output, session) {
       addProviderTiles(providers$Esri.WorldTopoMap, group = "Carte simple") %>%
       addProviderTiles(providers$OpenStreetMap, group = "Carte détaillée") %>%
       addLayersControl(baseGroups = c("Carte simple", "Carte détaillée"),
-                       position = "bottomright",
+                       position = "topleft",
                        options = layersControlOptions(collapsed = FALSE)) %>%
       setMaxBounds(MAX_BOUNDS[1L], MAX_BOUNDS[2L], MAX_BOUNDS[3L], MAX_BOUNDS[4L]) %>%
       fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
