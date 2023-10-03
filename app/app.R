@@ -33,10 +33,10 @@ etendue <-
     BOUNDS_IDF[3L] - BOUNDS_IDF[1L],
     BOUNDS_IDF[4L] - BOUNDS_IDF[2L]
   )
-MAX_BOUNDS <- c(BOUNDS_IDF[1L] - etendue[1L],
-                BOUNDS_IDF[2L] - etendue[2L],
-                BOUNDS_IDF[3L] + etendue[1L],
-                BOUNDS_IDF[4L] + etendue[2L])
+MAX_BOUNDS <- c(BOUNDS_IDF[1L] - etendue[1L] / 4,
+                BOUNDS_IDF[2L] - etendue[2L] / 4,
+                BOUNDS_IDF[3L] + etendue[1L] / 4,
+                BOUNDS_IDF[4L] + etendue[2L] / 4)
 TAILLE_DEFAUT <- 500L
 TAILLE_MAX <- 10000L
 TRANCHES_SEL_DEFAUT <- unname(list_tranches)
@@ -214,7 +214,10 @@ ui <- navbarPage_dsfr(
                            window.scrollTo(0,0);
                          });"
                          ),
-                         includeScript("centercross.js")
+                         includeScript("centercross.js"),
+                         tags$link(rel = "stylesheet",
+                                   href = "https://unpkg.com/leaflet-geosearch@3.9.0/dist/geosearch.css"),
+                         tags$script(src="https://unpkg.com/leaflet-geosearch@3.9.0/dist/geosearch.umd.js")
                        ),
                        leafletOutput("map", width = "100%", height = "100%"),
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
@@ -342,17 +345,39 @@ server <- function(input, output, session) {
   
   output$map <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom = 8,
-                                     zoomControl= FALSE)) %>%
-      addProviderTiles(providers$Esri.WorldTopoMap) %>%
+                                     zoomControl = FALSE)) %>%
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Carte simple") %>%
+      addProviderTiles(providers$OpenStreetMap, group = "Carte détaillée") %>%
+      addLayersControl(baseGroups = c("Carte simple", "Carte détaillée"),
+                       position = "bottomright",
+                       options = layersControlOptions(collapsed = FALSE)) %>%
       setMaxBounds(MAX_BOUNDS[1L], MAX_BOUNDS[2L], MAX_BOUNDS[3L], MAX_BOUNDS[4L]) %>%
       fitBounds(BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]) %>%
-      onRender("
-            function(el,x) {
+      onRender(sprintf("function(el,x) {
                 let mymap = this;
                 var control = L.centerCross();
                 mymap.addLayer(control);
                 cercle_centre = L.circle(mymap.getCenter(), {radius: 500, stroke: false, fillColor: 'black', fillOpacity: 0.2}).addTo(mymap);
                 mymap.doubleClickZoom.disable();
+                
+                const provider = new GeoSearch.OpenStreetMapProvider({
+                  params: {
+                    'accept-language': 'fr',
+                    countrycodes: 'fr',
+                    addressdetails: 0,
+                    viewbox: '%f,%f,%f,%f',
+                    bounded: 1,
+                  },
+                });
+                
+                const search = new GeoSearch.GeoSearchControl({
+                  provider: provider,
+                  style: 'bar',
+                  searchLabel: 'Chercher un emplacement',
+                  showMarker: false,
+                });
+                mymap.addControl(search);
+                
                 mymap.on('dblclick', function(event) {
 	                mymap.setView(event.latlng, mymap.getZoom()+1);
                 });
@@ -362,7 +387,7 @@ server <- function(input, output, session) {
                 L.control.zoom({ position: 'bottomright' }).addTo(this);
                 $('.leaflet-control-zoom-in').addClass('fr-btn  fr-icon-zoom-in-line').empty();
                 $('.leaflet-control-zoom-out').addClass('fr-btn  fr-icon-zoom-out-line').empty();
-            }")
+            }", BOUNDS_IDF[1L], BOUNDS_IDF[2L], BOUNDS_IDF[3L], BOUNDS_IDF[4L]))
   })
   observe({
     leafletProxy("map",
