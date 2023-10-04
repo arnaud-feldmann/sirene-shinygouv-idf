@@ -54,4 +54,4 @@ jobs:
     - name: 'Upgrade helm'
       run: |
         helm dependency build ./helm
-        helm upgrade --reuse-values --set shiny.image.tag=${{ steps.date.outputs.date }} sirene-shinygouv-idf ./helm
+        helm upgrade --install --set shiny.image.tag=${{ steps.date.outputs.date }} sirene-shinygouv-idf ./helm
