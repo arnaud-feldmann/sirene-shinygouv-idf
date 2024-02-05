@@ -222,7 +222,7 @@ ui <- navbarPage_dsfr(
                        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
                                      draggable = FALSE,
                                      numericInput_dsfr("taille",
-                                                       label = HTML("<b>Taille du cercle (m)</b>"),
+                                                       label = HTML("<b>Rayon du cercle (m)</b>"),
                                                        value = TAILLE_DEFAUT,
                                                        min = 0L,
                                                        max = TAILLE_MAX,
