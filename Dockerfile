@@ -3,14 +3,14 @@ WORKDIR /ali
 RUN mkdir -p renv
 COPY .Rprofile renv.lock shiny.Rproj ./
 COPY renv/activate.R renv/settings.json ./renv/
-RUN apk add build-base && installr -d renv && R -e "renv::restore(packages = 'renv')" && R -e "renv::isolate()"
+RUN apk add build-base && installr -d renv && R -e "renv::restore()" && R -e "renv::isolate()"
 
 FROM rhub/r-minimal as APP_RENV
 WORKDIR /app
 RUN mkdir -p renv
 COPY ./app/.Rprofile ./app/renv.lock ./app/app.Rproj ./
 COPY ./app/renv/activate.R ./app/renv/settings.json ./renv/
-RUN apk add build-base gdal-dev libxml2-dev proj-dev gfortran geos-dev libpng-dev && installr -d renv && R -e "renv::restore(packages = 'renv')"
+RUN apk add build-base gdal-dev libxml2-dev proj-dev gfortran geos-dev libpng-dev && installr -d renv && R -e "renv::restore()"
 RUN R -e "renv::isolate()"
 
 FROM rhub/r-minimal as ALI_EXEC
