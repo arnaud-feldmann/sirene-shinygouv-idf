@@ -10,7 +10,7 @@ geoloc_adresse <- here("input", "GeolocalisationEtablissement_Sirene_pour_etudes
 # Sirene stock etab
 stock_etabs_adresse <- here("input", "StockEtablissement_utf8.csv")
 
-con <- dbConnect(RSQLite::SQLite(), here("app", "sqlite", "db.sqlite"),
+con <- dbConnect(RSQLite::SQLite(), here("..", "app", "sqlite", "db.sqlite"),
                  extended_types = TRUE)
 
 dbExecute(con, "DROP TABLE IF EXISTS geoloc_idf")

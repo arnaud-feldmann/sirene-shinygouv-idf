@@ -7,7 +7,7 @@ library(stringr)
 # Sirene stock entreprises
 stock_ent_adresse <- here("input", "StockUniteLegale_utf8.csv")
 
-con <- dbConnect(RSQLite::SQLite(), here("app", "sqlite", "db.sqlite"),
+con <- dbConnect(RSQLite::SQLite(), here("..", "app", "sqlite", "db.sqlite"),
                  extended_types = TRUE)
 
 dbExecute(con, "DELETE FROM stock_ent_idf")

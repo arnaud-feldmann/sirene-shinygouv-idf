@@ -1,11 +1,11 @@
 library(RSQLite)
 library(here)
 
-unlink(here("app", "sqlite"), recursive = TRUE)
+unlink(here("..", "app", "sqlite"), recursive = TRUE)
 Sys.sleep(5L)
-dir.create(here("app", "sqlite"), showWarnings = FALSE)
+dir.create(here("..", "app", "sqlite"), showWarnings = FALSE)
 
-con <- dbConnect(RSQLite::SQLite(), here("app", "sqlite", "db.sqlite"),
+con <- dbConnect(RSQLite::SQLite(), here("..", "app", "sqlite", "db.sqlite"),
                  extended_types = TRUE)
 
 dbExecute(con,

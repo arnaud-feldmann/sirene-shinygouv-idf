@@ -37,8 +37,8 @@ df_tranches <-
          tranche = list_tranches) %>%
   as.data.frame()
 
-dir.create(here("app", "tables"), showWarnings = FALSE)
-saveRDS(df_a88_a17, here("app", "tables", "df_a88_a17.Rds"))
-saveRDS(list_a88_a17, here("app", "tables", "list_a88_a17.Rds"))
-saveRDS(df_tranches, here("app", "tables", "df_tranches.Rds"))
-saveRDS(list_tranches, here("app", "tables", "list_tranches.Rds"))
+dir.create(here("..", "app", "tables"), showWarnings = FALSE)
+saveRDS(df_a88_a17, here("..", "app", "tables", "df_a88_a17.Rds"))
+saveRDS(list_a88_a17, here("..", "app", "tables", "list_a88_a17.Rds"))
+saveRDS(df_tranches, here("..", "app", "tables", "df_tranches.Rds"))
+saveRDS(list_tranches, here("..", "app", "tables", "list_tranches.Rds"))

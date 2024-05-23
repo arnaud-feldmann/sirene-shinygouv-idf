@@ -1,8 +1,8 @@
 FROM rhub/r-minimal as ALI_RENV
 WORKDIR /ali
 RUN mkdir -p renv
-COPY .Rprofile renv.lock shiny.Rproj ./
-COPY renv/activate.R renv/settings.json ./renv/
+COPY ./ali/.Rprofile ./ali/renv.lock ./ali/ali.Rproj ./
+COPY ./ali/renv/activate.R ./ali/renv/settings.json ./renv/
 RUN apk add build-base && installr -d renv && R -e "renv::restore()" && R -e "renv::isolate()"
 
 FROM rhub/r-minimal as APP_RENV
@@ -16,9 +16,9 @@ RUN R -e "renv::isolate()"
 FROM rhub/r-minimal as ALI_EXEC
 WORKDIR /ali
 COPY --from=ALI_RENV /ali .
-COPY ./0-telecharger_input.R ./1-definition_schemas.R ./2-alimentation_entreprises.R ./3-alimentation_etabs.R ./4-tables.R ./
-RUN mkdir -p app/tables && mkdir app/sqlite && mkdir input
-COPY ./input/a17_a88t.csv ./input/a17_a88t.csv
+COPY ./ali/0-telecharger_input.R ./ali/1-definition_schemas.R ./ali/2-alimentation_entreprises.R ./ali/3-alimentation_etabs.R ./ali/4-tables.R ./
+RUN mkdir -p /app/tables && mkdir /app/sqlite && mkdir /ali/input
+COPY ./ali/input/a17_a88t.csv /ali/input/a17_a88t.csv
 RUN Rscript 0-telecharger_input.R && Rscript 1-definition_schemas.R && Rscript 2-alimentation_entreprises.R && Rscript 3-alimentation_etabs.R && Rscript 4-tables.R
 
 FROM rhub/r-minimal as APP_EXEC
@@ -27,8 +27,8 @@ WORKDIR /app
 COPY --from=APP_RENV /app .
 COPY ./app/app.R ./app/centercross.js ./app/styles.css ./app/geosearch.css ./app/geosearch-umd.js ./
 RUN mkdir tables && mkdir sqlite
-COPY --from=ALI_EXEC /ali/app/tables/df_a88_a17.Rds /ali/app/tables/list_a88_a17.Rds ali/app/tables/df_tranches.Rds /ali/app/tables/list_tranches.Rds ./tables/
-COPY --from=ALI_EXEC /ali/app/sqlite/db.sqlite ./sqlite/
+COPY --from=ALI_EXEC /app/tables/df_a88_a17.Rds /app/tables/list_a88_a17.Rds /app/tables/df_tranches.Rds /app/tables/list_tranches.Rds ./tables/
+COPY --from=ALI_EXEC /app/sqlite/db.sqlite ./sqlite/
 RUN apk add libxml2-dev
 EXPOSE 3838	
 CMD ["Rscript", "app.R", "0.0.0.0", "3838"] 
