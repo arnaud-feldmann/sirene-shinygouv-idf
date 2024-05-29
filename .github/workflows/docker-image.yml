@@ -8,11 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - name: Get current date
       id: date
@@ -28,3 +25,11 @@ jobs:
       run: |
         docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:v${{ steps.date.outputs.date }} --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:latest
         docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf --all-tags
+  keepalive-job:
+    name: Keepalive Workflow
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
