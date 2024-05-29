@@ -26,5 +26,5 @@ jobs:
         password: ${{secrets.GITHUB_TOKEN}}
     - name: Build the Docker image
       run: |
-        docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:${{ steps.date.outputs.date }} --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:latest
+        docker build . --file Dockerfile --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:v${{ steps.date.outputs.date }} --tag ghcr.io/arnaud-feldmann/sirene-shinygouv-idf:latest
         docker push ghcr.io/arnaud-feldmann/sirene-shinygouv-idf --all-tags
