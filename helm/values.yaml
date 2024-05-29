@@ -1,7 +1,7 @@
 shiny:
   image:
-    repository: ghcr.io/arnaud-feldmann/sirene-shinygouv-idf 
-    tag: "latest"
+    repository: ghcr.io/arnaud-feldmann/sirene-shinygouv-idf
+    tag: latest
     pullPolicy: Always
   ingress:
     enabled: true
@@ -11,4 +11,9 @@ shiny:
   postgresql:
     enabled: false
   resources: {}
-
+  probes:
+    exec:
+      command:
+      - exit $(test $(date +%d) -eq 6 && echo 1 || echo 0)
+    failureThreshold: 1
+    initialDelaySeconds: 90000
